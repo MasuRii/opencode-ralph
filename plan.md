@@ -131,7 +131,7 @@ opencode-ralph/
 
 ### Phase 3: Utility Functions
 
-- [ ] **3.1** Create `src/util/time.ts` with `formatDuration(ms: number): string`:
+- [x] **3.1** Create `src/util/time.ts` with `formatDuration(ms: number): string`:
   - If hours > 0: return `"Xh Ym"`
   - If minutes > 0: return `"Xm Ys"`
   - Else: return `"Xs"`
