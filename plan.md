@@ -562,7 +562,7 @@ opencode-ralph/
   - What is Ralph-driven development
   - Link to original blog post
 
-- [ ] **13.2** Add installation section to README:
+- [x] **13.2** Add installation section to README:
   - Clone instructions
   - `bun install` command
   - Optional: global install with `bun link`

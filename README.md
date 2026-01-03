@@ -33,3 +33,31 @@ For more on the methodology, see:
 - Lock file to prevent multiple instances
 - Pause/resume support via keyboard
 
+## Installation
+
+### Prerequisites
+
+- [Bun](https://bun.sh) runtime (v1.0+)
+- [OpenCode](https://opencode.ai) CLI (for the agent backend)
+
+### Setup
+
+```bash
+# Clone the repository
+git clone https://github.com/your-username/opencode-ralph.git
+cd opencode-ralph
+
+# Install dependencies
+bun install
+```
+
+### Global Installation (Optional)
+
+To make the `ralph` command available globally:
+
+```bash
+bun link
+```
+
+After linking, you can run `ralph` from any directory.
+
