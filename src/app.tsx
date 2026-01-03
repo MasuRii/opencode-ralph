@@ -6,3 +6,9 @@ import { Footer } from "./components/footer";
 import { PausedOverlay } from "./components/paused";
 import type { LoopState, LoopOptions, PersistedState, ToolEvent } from "./state";
 import { colors } from "./components/colors";
+
+type AppProps = {
+  options: LoopOptions;
+  persistedState: PersistedState;
+  onQuit: () => void;
+};

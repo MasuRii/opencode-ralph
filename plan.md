@@ -318,7 +318,7 @@ opencode-ralph/
   - Import all components (Header, Log, Footer, PausedOverlay)
   - Import types and colors
 
-- [ ] **9.2** Define `AppProps` type:
+- [x] **9.2** Define `AppProps` type:
 
   ```typescript
   type AppProps = {
