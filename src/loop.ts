@@ -45,5 +45,14 @@ export async function runLoop(
   callbacks: LoopCallbacks,
   signal: AbortSignal,
 ): Promise<void> {
-  // TODO: Implement loop logic
+  // Start opencode server
+  const server = await createOpencodeServer({ signal });
+  const client = createOpencodeClient({ baseUrl: server.url });
+
+  try {
+    // TODO: Implement main loop logic
+  } finally {
+    // Cleanup: close server on completion, error, or abort
+    server.close();
+  }
 }

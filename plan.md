@@ -407,7 +407,7 @@ opencode-ralph/
   ): Promise<void>;
   ```
 
-- [ ] **10.7** Implement server startup in `runLoop`:
+- [x] **10.7** Implement server startup in `runLoop`:
   - Call `createOpencodeServer()` to start opencode backend
   - Create client with `createOpencodeClient({ baseUrl: server.url })`
   - Store server reference for cleanup
