@@ -474,13 +474,13 @@ opencode-ralph/
   - Call `callbacks.onIterationComplete(iteration, duration, commitsThisIteration)`
   - Call `callbacks.onCommitsUpdated(totalCommits)`
 
-- [ ] **10.20** Implement cleanup in `runLoop`:
+- [x] **10.20** Implement cleanup in `runLoop`:
   - Close server on completion, error, or abort
   - Use try/finally pattern
 
 ### Phase 11: CLI Entry Point
 
-- [ ] **11.1** Create `src/index.ts` with yargs setup:
+- [x] **11.1** Create `src/index.ts` with yargs setup:
   - Import yargs
   - Define options: `--plan`, `--model`, `--prompt`, `--reset`
   - Set defaults: plan="plan.md", model="opencode/claude-opus-4-5"
