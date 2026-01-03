@@ -150,7 +150,11 @@ export async function runLoop(
           }
         }
 
-        // TODO: Implement session completion detection (10.17)
+        // Session completion detection (10.17)
+        if (event.type === "session.idle" && event.properties.sessionID === sessionId) {
+          break;
+        }
+
         // TODO: Implement session error handling (10.18)
       }
 

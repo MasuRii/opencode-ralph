@@ -457,7 +457,7 @@ opencode-ralph/
   - Map to `ToolEvent` with appropriate icon
   - Call `callbacks.onEvent(event)`
 
-- [ ] **10.17** Implement session completion detection:
+- [x] **10.17** Implement session completion detection:
   - Check for `session.idle` event with matching session ID
   - Break out of event loop when detected
 
