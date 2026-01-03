@@ -532,7 +532,7 @@ opencode-ralph/
   - Create `test-plan.md` with a few checkbox items
   - Test parsing with `parsePlan()`
 
-- [ ] **12.2** Test lock file functionality:
+- [x] **12.2** Test lock file functionality:
   - Run `ralph`, verify `.ralph-lock` created
   - Try running second instance, verify error message
   - Kill first instance, verify lock released
