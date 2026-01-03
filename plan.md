@@ -153,7 +153,7 @@ opencode-ralph/
   - Spawn `git rev-list --count ${hash}..HEAD`
   - Parse output as integer, return 0 if NaN
 
-- [ ] **3.6** Create `src/plan.ts` with `parsePlan(path: string): Promise<{ done: number; total: number }>`:
+- [x] **3.6** Create `src/plan.ts` with `parsePlan(path: string): Promise<{ done: number; total: number }>`:
   - Read file with `Bun.file(path).text()`
   - Return `{ done: 0, total: 0 }` if file doesn't exist
   - Count `- [x]` (case insensitive) for done
