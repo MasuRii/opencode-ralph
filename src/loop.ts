@@ -53,6 +53,7 @@ export async function runLoop(
     // Initialize iteration counter from persisted state
     let iteration = persistedState.iterationTimes.length;
     let isPaused = false;
+    let previousCommitCount = await getCommitsSince(persistedState.initialCommitHash);
 
     // Main loop
     while (!signal.aborted) {
@@ -171,7 +172,14 @@ export async function runLoop(
         }
       }
 
-      // TODO: Implement iteration completion (10.19)
+      // Iteration completion (10.19)
+      const iterationDuration = Date.now() - iterationStartTime;
+      const totalCommits = await getCommitsSince(persistedState.initialCommitHash);
+      const commitsThisIteration = totalCommits - previousCommitCount;
+      previousCommitCount = totalCommits;
+      
+      callbacks.onIterationComplete(iteration, iterationDuration, commitsThisIteration);
+      callbacks.onCommitsUpdated(totalCommits);
 
       // Temporary: break to avoid infinite loop until remaining tasks are implemented
       break;

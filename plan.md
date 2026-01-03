@@ -467,7 +467,7 @@ opencode-ralph/
   - Call `callbacks.onError(message)`
   - Close server and throw error
 
-- [ ] **10.19** Implement iteration completion:
+- [x] **10.19** Implement iteration completion:
   - Calculate iteration duration
   - Get commit count with `getCommitsSince(persistedState.initialCommitHash)`
   - Calculate commits this iteration (current - previous)
