@@ -19,3 +19,4 @@ A plan with a mix of completed and incomplete tasks.
 - [ ] Version bump
 - [ ] Create release notes
 - [ ] Publish package
+- [ ] Announce release
