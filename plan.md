@@ -98,7 +98,7 @@ Comprehensive test suite for the Ralph TUI harness using Bun's built-in test run
 - [x] **3.6** Test `calculateEta()` with single iteration:
   - `calculateEta([60000], 5)` should return `300000` (5 * 60000)
 
-- [ ] **3.7** Test `calculateEta()` with multiple iterations:
+- [x] **3.7** Test `calculateEta()` with multiple iterations:
   - `calculateEta([60000, 120000, 90000], 4)` should return `360000` (avg 90000 * 4)
 
 - [ ] **3.8** Test `calculateEta()` with zero remaining tasks:

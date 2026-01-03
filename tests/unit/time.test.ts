@@ -57,5 +57,13 @@ describe("time utilities", () => {
         expect(calculateEta([60000], 5)).toBe(300000);
       });
     });
+
+    describe("multiple iterations", () => {
+      it("should calculate average and multiply by remaining tasks", () => {
+        // Average of [60000, 120000, 90000] = 90000ms
+        // 90000ms * 4 remaining tasks = 360000ms
+        expect(calculateEta([60000, 120000, 90000], 4)).toBe(360000);
+      });
+    });
   });
 });
