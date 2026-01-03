@@ -355,7 +355,7 @@ opencode-ralph/
 
 ### Phase 10: Loop Logic
 
-- [ ] **10.1** Create `src/loop.ts` with imports:
+- [x] **10.1** Create `src/loop.ts` with imports:
   - Import `createOpencodeServer`, `createOpencodeClient` from `@opencode-ai/sdk`
   - Import types from state.ts
   - Import git and plan utilities
