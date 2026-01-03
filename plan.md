@@ -149,7 +149,7 @@ opencode-ralph/
   - Spawn `git rev-parse HEAD` using `Bun.spawn()`
   - Read stdout, trim, return hash
 
-- [ ] **3.5** Add `getCommitsSince(hash: string): Promise<number>` to `src/git.ts`:
+- [x] **3.5** Add `getCommitsSince(hash: string): Promise<number>` to `src/git.ts`:
   - Spawn `git rev-list --count ${hash}..HEAD`
   - Parse output as integer, return 0 if NaN
 
