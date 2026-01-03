@@ -2,8 +2,9 @@
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import { acquireLock, releaseLock } from "./lock";
-import { loadState, PersistedState } from "./state";
+import { loadState, saveState, PersistedState } from "./state";
 import { confirm } from "./prompt";
+import { getHeadHash } from "./git";
 
 const argv = await yargs(hideBin(process.argv))
   .scriptName("ralph")
@@ -73,7 +74,19 @@ if (existingState && !shouldReset) {
   }
 }
 
-// TODO: Implement remaining startup logic in 11.5-11.9
+// Create fresh state if needed
+if (!stateToUse) {
+  const headHash = await getHeadHash();
+  stateToUse = {
+    startTime: Date.now(),
+    initialCommitHash: headHash,
+    iterationTimes: [],
+    planFile: argv.plan,
+  };
+  await saveState(stateToUse);
+}
+
+// TODO: Implement remaining startup logic in 11.6-11.9
 console.log("Ralph starting with options:", {
   plan: argv.plan,
   model: argv.model,

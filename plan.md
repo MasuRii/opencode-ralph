@@ -498,7 +498,7 @@ opencode-ralph/
   - If state exists with different plan: `confirm("Reset state for new plan?")`
   - Handle user response appropriately
 
-- [ ] **11.5** Add fresh start state creation:
+- [x] **11.5** Add fresh start state creation:
   - If no state or user chose to reset
   - Get HEAD hash with `getHeadHash()`
   - Create new `PersistedState` with current time, hash, empty iterationTimes, planFile
