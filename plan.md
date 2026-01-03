@@ -145,7 +145,7 @@ opencode-ralph/
   - Return `"--:--"` if `ms === null`
   - Otherwise return `"~" + formatDuration(ms) + " remaining"`
 
-- [ ] **3.4** Create `src/git.ts` with `getHeadHash(): Promise<string>`:
+- [x] **3.4** Create `src/git.ts` with `getHeadHash(): Promise<string>`:
   - Spawn `git rev-parse HEAD` using `Bun.spawn()`
   - Read stdout, trim, return hash
 
