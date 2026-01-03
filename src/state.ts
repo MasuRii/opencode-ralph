@@ -4,3 +4,23 @@ export type PersistedState = {
   iterationTimes: number[]; // Duration of each completed iteration (ms)
   planFile: string; // Which plan file we're working on
 };
+
+export type LoopState = {
+  status: "starting" | "running" | "paused" | "complete" | "error";
+  iteration: number;
+  tasksComplete: number;
+  totalTasks: number;
+  commits: number;
+  events: ToolEvent[];
+  error?: string;
+};
+
+export type ToolEvent = {
+  iteration: number;
+  type: "tool" | "separator";
+  icon?: string;
+  text: string;
+  timestamp: number;
+  duration?: number; // For separators: iteration duration
+  commitCount?: number; // For separators: commits this iteration
+};

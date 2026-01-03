@@ -84,7 +84,7 @@ opencode-ralph/
   };
   ```
 
-- [ ] **2.2** Add `LoopState` type to `src/state.ts`:
+- [x] **2.2** Add `LoopState` type to `src/state.ts`:
 
   ```typescript
   export type LoopState = {
@@ -98,7 +98,7 @@ opencode-ralph/
   };
   ```
 
-- [ ] **2.3** Add `ToolEvent` type to `src/state.ts`:
+- [x] **2.3** Add `ToolEvent` type to `src/state.ts`:
 
   ```typescript
   export type ToolEvent = {
