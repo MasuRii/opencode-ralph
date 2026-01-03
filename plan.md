@@ -84,7 +84,7 @@ Comprehensive test suite for the Ralph TUI harness using Bun's built-in test run
   - `formatDuration(90000)` should return `"1m 30s"`
   - `formatDuration(300000)` should return `"5m 0s"`
 
-- [ ] **3.3** Test `formatDuration()` for hours:
+- [x] **3.3** Test `formatDuration()` for hours:
   - `formatDuration(3700000)` should return `"1h 1m"`
   - `formatDuration(7200000)` should return `"2h 0m"`
 

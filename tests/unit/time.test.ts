@@ -22,5 +22,15 @@ describe("time utilities", () => {
         expect(formatDuration(300000)).toBe("5m 0s");
       });
     });
+
+    describe("hours", () => {
+      it("should format 3700000ms (1h 1m 40s) as '1h 1m'", () => {
+        expect(formatDuration(3700000)).toBe("1h 1m");
+      });
+
+      it("should format 7200000ms (2h 0m) as '2h 0m'", () => {
+        expect(formatDuration(7200000)).toBe("2h 0m");
+      });
+    });
   });
 });
