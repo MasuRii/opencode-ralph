@@ -5,6 +5,11 @@ import { parsePlan } from "./plan.js";
 
 const DEFAULT_PROMPT = `READ all of {plan}. Pick ONE task. If needed, verify via web/code search. Complete task. Commit change (update the plan.md in the same commit). ONLY do one task unless GLARINGLY OBVIOUS steps should run together. Update {plan}. If you learn a critical operational detail, update AGENTS.md. When ALL tasks complete, create .ralph-done and exit. NEVER GIT PUSH. ONLY COMMIT.`;
 
+export function buildPrompt(options: LoopOptions): string {
+  const template = options.prompt || DEFAULT_PROMPT;
+  return template.replace(/\{plan\}/g, options.planFile);
+}
+
 export type LoopCallbacks = {
   onIterationStart: (iteration: number) => void;
   onEvent: (event: ToolEvent) => void;

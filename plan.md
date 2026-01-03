@@ -386,7 +386,7 @@ opencode-ralph/
   const DEFAULT_PROMPT = `READ all of {plan}. Pick ONE task. If needed, verify via web/code search. Complete task. Commit change (update the plan.md in the same commit). ONLY do one task unless GLARINGLY OBVIOUS steps should run together. Update {plan}. If you learn a critical operational detail, update AGENTS.md. When ALL tasks complete, create .ralph-done and exit. NEVER GIT PUSH. ONLY COMMIT.`;
   ```
 
-- [ ] **10.4** Create `buildPrompt(options: LoopOptions): string` function:
+- [x] **10.4** Create `buildPrompt(options: LoopOptions): string` function:
   - Take the prompt template (options.prompt or DEFAULT_PROMPT)
   - Replace `{plan}` with `options.planFile`
   - Return final prompt string
