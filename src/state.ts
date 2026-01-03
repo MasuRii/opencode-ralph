@@ -24,3 +24,13 @@ export type ToolEvent = {
   duration?: number; // For separators: iteration duration
   commitCount?: number; // For separators: commits this iteration
 };
+
+export const STATE_FILE = ".ralph-state.json";
+
+export async function loadState(): Promise<PersistedState | null> {
+  const file = Bun.file(STATE_FILE);
+  if (!(await file.exists())) {
+    return null;
+  }
+  return await file.json();
+}

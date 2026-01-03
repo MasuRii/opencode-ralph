@@ -112,7 +112,7 @@ opencode-ralph/
   };
   ```
 
-- [ ] **2.4** Add `STATE_FILE` constant and `loadState()` function to `src/state.ts`:
+- [x] **2.4** Add `STATE_FILE` constant and `loadState()` function to `src/state.ts`:
   - Constant: `export const STATE_FILE = ".ralph-state.json"`
   - Function reads file with `Bun.file()`, returns `PersistedState | null`
   - Return `null` if file doesn't exist
