@@ -586,7 +586,7 @@ opencode-ralph/
   - `g` - Scroll to top
   - `G` - Scroll to bottom
 
-- [ ] **13.6** Add tips section to README:
+- [x] **13.6** Add tips section to README:
   - Planning tips (spend time on plan before running)
   - AGENTS.md usage
   - Monitoring with GitHub Desktop

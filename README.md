@@ -144,3 +144,54 @@ All files are gitignored by default. Add them to your `.gitignore` if not alread
 | `Home` | Scroll to top |
 | `End` | Scroll to bottom |
 
+## Tips
+
+### Spend Time on the Plan
+
+The plan is everything. Before starting Ralph, invest significant time crafting a detailed, well-structured plan file:
+
+- **Be specific**: Each task should be small and isolated enough that a new engineer could implement it immediately
+- **Chronological order**: Tasks should be ordered so dependencies come first
+- **Use checkboxes**: Ralph parses `- [x]` and `- [ ]` to track progress
+- **1000+ lines is normal**: Don't be afraid of long plans - more detail means fewer hallucinations
+- **Read every line**: If you're not happy with the plan, keep refining before running
+
+> "I spend an hour purely on the plan. I do not touch code." — Luke Parker
+
+### Use AGENTS.md for Accumulated Wisdom
+
+The `AGENTS.md` file is where Ralph's learnings persist across iterations:
+
+- **Build steps**: If Ralph discovers a tricky build command, it writes it to AGENTS.md so future iterations don't rediscover fire
+- **Common pitfalls**: When Ralph makes a mistake, add a "sign" to prevent the same error
+- **Configuration quirks**: Library-specific settings, environment requirements, etc.
+
+Example AGENTS.md content:
+```markdown
+## Build Commands
+- Run `bun install` before `bun run dev`
+- Tests require `DATABASE_URL` to be set
+
+## Pitfalls
+- Never import from `solid-js` directly, use `@opentui/solid`
+- The API requires `Content-Type: application/json` header
+```
+
+Think of it as putting up warning signs at the playground - when Ralph falls off the slide, you don't just put him back; you put up a sign that says "DON'T JUMP."
+
+### Monitor with GitHub Desktop
+
+While Ralph runs, use GitHub Desktop (or `git log --oneline -n 20`) to monitor progress:
+
+- **Watch commits roll in**: Each completed task should produce a commit
+- **Review before pushing**: Ralph only commits, never pushes - you maintain the final review checkpoint
+- **Catch issues early**: If commits stop appearing, check the TUI for errors or paused state
+- **Squash if needed**: Since you control the push, you can squash messy commits before they reach the remote
+
+### General Tips
+
+- **Never let Ralph push**: The `--only-commit` design ensures you always review before code reaches the remote
+- **Pause to intervene**: Press `p` if you see Ralph heading in the wrong direction - fix the issue manually, then resume
+- **Trust eventual consistency**: Ralph will test your patience, but deterministic failures are debuggable failures
+- **Tune, don't blame**: When Ralph does something bad, Ralph gets tuned - like a guitar. Fix the prompt, not just the code.
+
