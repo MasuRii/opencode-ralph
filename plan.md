@@ -255,7 +255,7 @@ Comprehensive test suite for the Ralph TUI harness using Bun's built-in test run
   - `createMockLoopOptions(overrides?)`
   - `createMockToolEvent(overrides?)`
 
-- [ ] **9.3** Add test cleanup in `afterEach`:
+- [x] **9.3** Add test cleanup in `afterEach`:
   - Remove `.ralph-lock`, `.ralph-pause`, `.ralph-done`, `.ralph-state.json`
   - Reset any global state
 

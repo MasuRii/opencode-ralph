@@ -211,3 +211,49 @@ export async function withTempDir<T>(
     await dir.cleanup();
   }
 }
+
+/**
+ * List of ralph-specific files that should be cleaned up after tests.
+ * These are the control/state files that Ralph uses during operation.
+ */
+export const RALPH_FILES = [
+  ".ralph-lock",
+  ".ralph-pause",
+  ".ralph-done",
+  ".ralph-state.json",
+] as const;
+
+/**
+ * Cleans up all ralph-specific files from the current working directory.
+ * Safe to call even if the files don't exist.
+ *
+ * This function should be called in afterEach() for any test that might
+ * create these files (especially integration tests).
+ *
+ * @example
+ * ```ts
+ * import { describe, it, afterEach } from "bun:test";
+ * import { cleanupRalphFiles } from "../helpers/temp-files";
+ *
+ * describe("integration test", () => {
+ *   afterEach(async () => {
+ *     await cleanupRalphFiles();
+ *   });
+ *
+ *   it("should work with ralph files", async () => {
+ *     // Test creates .ralph-done, .ralph-pause, etc.
+ *     // Files are automatically cleaned up after test
+ *   });
+ * });
+ * ```
+ */
+export async function cleanupRalphFiles(): Promise<void> {
+  const { unlink } = await import("node:fs/promises");
+  for (const file of RALPH_FILES) {
+    try {
+      await unlink(file);
+    } catch {
+      // Ignore errors (file may not exist)
+    }
+  }
+}

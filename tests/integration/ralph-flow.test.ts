@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, mock } from "bun:test";
 import { unlink } from "node:fs/promises";
+import { cleanupRalphFiles } from "../helpers/temp-files";
 
 // --- Mock Setup ---
 
@@ -158,12 +159,8 @@ describe("ralph flow integration", () => {
         // Ignore if file doesn't exist
       }
     }
-    // Clean up .ralph-done file if created during test
-    try {
-      await unlink(".ralph-done");
-    } catch {
-      // Ignore
-    }
+    // Clean up all ralph-specific files (.ralph-lock, .ralph-pause, .ralph-done, .ralph-state.json)
+    await cleanupRalphFiles();
   });
 
   it("should call callbacks in correct order during iteration", async () => {
