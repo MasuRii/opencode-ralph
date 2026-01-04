@@ -250,7 +250,7 @@ Comprehensive test suite for the Ralph TUI harness using Bun's built-in test run
   - Function to create temp directory for test fixtures
   - Automatic cleanup after tests
 
-- [ ] **9.2** Create mock factories for common types:
+- [x] **9.2** Create mock factories for common types:
   - `createMockPersistedState(overrides?)`
   - `createMockLoopOptions(overrides?)`
   - `createMockToolEvent(overrides?)`
