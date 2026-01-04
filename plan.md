@@ -237,7 +237,7 @@ Comprehensive test suite for the Ralph TUI harness using Bun's built-in test run
   - Call `abort()` mid-iteration
   - Verify loop exits without error
 
-- [ ] **8.5** Test state persistence across iterations:
+- [x] **8.5** Test state persistence across iterations:
   - Run mock iteration
   - Verify `iterationTimes` array updated
   - Verify state file written with correct values

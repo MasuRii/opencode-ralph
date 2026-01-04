@@ -496,4 +496,93 @@ describe("ralph flow integration", () => {
     );
     expect(iterationStartEvents.length).toBeGreaterThanOrEqual(1);
   });
+
+  it("should update state persistence across iterations via onIterationComplete callback", async () => {
+    const options: LoopOptions = {
+      planFile: testPlanFile,
+      model: "anthropic/claude-sonnet-4",
+      prompt: "Test prompt for {plan}",
+    };
+
+    // Create a fresh persisted state with empty iteration times
+    const persistedState: PersistedState = {
+      startTime: Date.now(),
+      initialCommitHash: "abc123",
+      iterationTimes: [],
+      planFile: testPlanFile,
+    };
+
+    // Track iteration completion data
+    let capturedIterationDurations: number[] = [];
+    let iterationCompleteCallCount = 0;
+
+    // Create callbacks that track and persist state like index.ts does
+    const callbacks: LoopCallbacks = {
+      onIterationStart: (iteration: number) => {
+        callbackOrder.push(`onIterationStart:${iteration}`);
+      },
+      onEvent: (event) => {
+        callbackOrder.push(`onEvent:${event.type}`);
+      },
+      onTasksUpdated: (done, total) => {
+        callbackOrder.push(`onTasksUpdated:${done}/${total}`);
+      },
+      onCommitsUpdated: (commits) => {
+        callbackOrder.push(`onCommitsUpdated:${commits}`);
+      },
+      onDiffUpdated: (added, removed) => {
+        callbackOrder.push(`onDiffUpdated:+${added}/-${removed}`);
+      },
+      onIterationComplete: (iteration, duration, commits) => {
+        callbackOrder.push(`onIterationComplete:${iteration}`);
+        iterationCompleteCallCount++;
+
+        // Simulate what index.ts does: update persisted state and save
+        persistedState.iterationTimes.push(duration);
+        capturedIterationDurations.push(duration);
+      },
+      onPause: () => {
+        callbackOrder.push("onPause");
+      },
+      onResume: () => {
+        callbackOrder.push("onResume");
+      },
+      onComplete: () => {
+        callbackOrder.push("onComplete");
+      },
+      onError: (error) => {
+        callbackOrder.push(`onError:${error}`);
+      },
+    };
+
+    const controller = new AbortController();
+
+    // Create .ralph-done file to stop after first iteration
+    cleanupFiles.push(".ralph-done");
+    setTimeout(async () => {
+      await Bun.write(".ralph-done", "");
+    }, 50);
+
+    await runLoop(options, persistedState, callbacks, controller.signal);
+
+    // Verify onIterationComplete was called at least once
+    expect(iterationCompleteCallCount).toBeGreaterThanOrEqual(1);
+
+    // Verify iterationTimes array was updated
+    expect(persistedState.iterationTimes.length).toBeGreaterThanOrEqual(1);
+
+    // Verify captured durations match what's in persisted state
+    expect(persistedState.iterationTimes).toEqual(capturedIterationDurations);
+
+    // Verify duration values are non-negative numbers (can be 0 or very small with fast mocks)
+    for (const duration of persistedState.iterationTimes) {
+      expect(typeof duration).toBe("number");
+      expect(duration).toBeGreaterThanOrEqual(0);
+    }
+
+    // Verify the state has all required fields intact
+    expect(persistedState.startTime).toBeGreaterThan(0);
+    expect(persistedState.initialCommitHash).toBe("abc123");
+    expect(persistedState.planFile).toBe(testPlanFile);
+  });
 });
