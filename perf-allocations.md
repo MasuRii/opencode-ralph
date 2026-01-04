@@ -84,7 +84,8 @@ Every render:
 
 - [x] Only update elapsed signal when component is visible/active
 - [x] Consider longer interval (5s) or skip updates when paused
-- [ ] Use `requestAnimationFrame` pattern instead of `setInterval` if available
+- [x] Use `requestAnimationFrame` pattern instead of `setInterval` if available
+  - **N/A**: `requestAnimationFrame` is a browser-only API for syncing with display refresh (~60fps). In CLI/TUI contexts, it requires polyfills that just wrap `setTimeout(cb, 16ms)`. A 5-second `setInterval` is far more efficient than 60fps rAF for this use case.
 
 ### Phase 6: State Update Batching Review
 
