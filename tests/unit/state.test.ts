@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from "bun:test";
-import { loadState, saveState, STATE_FILE, type PersistedState } from "../../src/state";
+import { loadState, saveState, STATE_FILE, MAX_EVENTS, trimEvents, type PersistedState, type ToolEvent } from "../../src/state";
 import { unlink } from "node:fs/promises";
 
 describe("state management", () => {
@@ -189,6 +189,124 @@ describe("state management", () => {
 
       expect(loadedState).toEqual(originalState);
       expect(loadedState!.planFile).toBe("plans/feature-plan (v2).md");
+    });
+  });
+
+  describe("trimEvents()", () => {
+    // Helper to create mock ToolEvent
+    function createMockEvent(iteration: number, timestamp: number): ToolEvent {
+      return {
+        iteration,
+        type: "tool",
+        icon: "🔧",
+        text: `Event at ${timestamp}`,
+        timestamp,
+      };
+    }
+
+    it("should return same array when under MAX_EVENTS limit", () => {
+      const events: ToolEvent[] = [
+        createMockEvent(1, 1000),
+        createMockEvent(1, 2000),
+        createMockEvent(1, 3000),
+      ];
+
+      const result = trimEvents(events);
+
+      expect(result).toHaveLength(3);
+      expect(result).toEqual(events);
+    });
+
+    it("should return same array when exactly at MAX_EVENTS limit", () => {
+      const events: ToolEvent[] = Array.from({ length: MAX_EVENTS }, (_, i) =>
+        createMockEvent(Math.floor(i / 10) + 1, 1000 + i)
+      );
+
+      const result = trimEvents(events);
+
+      expect(result).toHaveLength(MAX_EVENTS);
+      expect(result).toEqual(events);
+    });
+
+    it("should trim to MAX_EVENTS keeping most recent events", () => {
+      const extraEvents = 50;
+      const totalEvents = MAX_EVENTS + extraEvents;
+      const events: ToolEvent[] = Array.from({ length: totalEvents }, (_, i) =>
+        createMockEvent(Math.floor(i / 10) + 1, 1000 + i)
+      );
+
+      const result = trimEvents(events);
+
+      expect(result).toHaveLength(MAX_EVENTS);
+      // Should keep the last MAX_EVENTS (indices extraEvents to totalEvents-1)
+      expect(result[0].timestamp).toBe(1000 + extraEvents);
+      expect(result[MAX_EVENTS - 1].timestamp).toBe(1000 + totalEvents - 1);
+    });
+
+    it("should preserve event order after trimming", () => {
+      const events: ToolEvent[] = Array.from({ length: MAX_EVENTS + 10 }, (_, i) =>
+        createMockEvent(i + 1, 1000 + i * 100)
+      );
+
+      const result = trimEvents(events);
+
+      // Check that events are in ascending timestamp order
+      for (let i = 1; i < result.length; i++) {
+        expect(result[i].timestamp).toBeGreaterThan(result[i - 1].timestamp);
+      }
+    });
+
+    it("should handle empty array", () => {
+      const result = trimEvents([]);
+
+      expect(result).toHaveLength(0);
+      expect(result).toEqual([]);
+    });
+
+    it("should handle single event", () => {
+      const events: ToolEvent[] = [createMockEvent(1, 1000)];
+
+      const result = trimEvents(events);
+
+      expect(result).toHaveLength(1);
+      expect(result[0]).toEqual(events[0]);
+    });
+
+    it("should correctly trim when one over MAX_EVENTS", () => {
+      const events: ToolEvent[] = Array.from({ length: MAX_EVENTS + 1 }, (_, i) =>
+        createMockEvent(1, 1000 + i)
+      );
+
+      const result = trimEvents(events);
+
+      expect(result).toHaveLength(MAX_EVENTS);
+      // First event (timestamp 1000) should be dropped
+      expect(result[0].timestamp).toBe(1001);
+      expect(result[MAX_EVENTS - 1].timestamp).toBe(1000 + MAX_EVENTS);
+    });
+
+    it("should preserve all event properties after trimming", () => {
+      const events: ToolEvent[] = Array.from({ length: MAX_EVENTS + 5 }, (_, i) => ({
+        iteration: i + 1,
+        type: i % 2 === 0 ? "tool" : "separator" as const,
+        icon: i % 2 === 0 ? "🔧" : undefined,
+        text: `Event ${i}`,
+        timestamp: 1000 + i,
+        duration: i % 2 === 1 ? 5000 : undefined,
+        commitCount: i % 2 === 1 ? 2 : undefined,
+      }));
+
+      const result = trimEvents(events);
+
+      // Check that the 6th event (index 5, which becomes index 0 after trim) has all properties
+      const expectedIndex = 5;
+      expect(result[0].iteration).toBe(events[expectedIndex].iteration);
+      expect(result[0].type).toBe(events[expectedIndex].type);
+      expect(result[0].icon).toBe(events[expectedIndex].icon);
+      expect(result[0].text).toBe(events[expectedIndex].text);
+      expect(result[0].timestamp).toBe(events[expectedIndex].timestamp);
+      expect(result[0].duration).toBe(events[expectedIndex].duration);
+      expect(result[0].commitCount).toBe(events[expectedIndex].commitCount);
     });
   });
 });

@@ -2,7 +2,7 @@
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import { acquireLock, releaseLock } from "./lock";
-import { loadState, saveState, PersistedState, LoopOptions, MAX_EVENTS } from "./state";
+import { loadState, saveState, PersistedState, LoopOptions, trimEvents } from "./state";
 import { confirm } from "./prompt";
 import { getHeadHash, getDiffStats, getCommitsSince } from "./git";
 import { startApp } from "./app";
@@ -168,16 +168,11 @@ async function main() {
         }));
       },
       onEvent: (event) => {
-        // Append event to state.events and trim to MAX_EVENTS
-        stateSetters.setState((prev) => {
-          const newEvents = [...prev.events, event];
-          return {
-            ...prev,
-            events: newEvents.length > MAX_EVENTS
-              ? newEvents.slice(-MAX_EVENTS)
-              : newEvents,
-          };
-        });
+        // Append event to state.events and trim to prevent unbounded growth
+        stateSetters.setState((prev) => ({
+          ...prev,
+          events: trimEvents([...prev.events, event]),
+        }));
       },
       onIterationComplete: (iteration, duration, commits) => {
         // Update the separator event for this iteration with duration/commits

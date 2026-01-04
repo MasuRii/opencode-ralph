@@ -30,6 +30,17 @@ export type ToolEvent = {
 export const STATE_FILE = ".ralph-state.json";
 export const MAX_EVENTS = 200;
 
+/**
+ * Trims an events array to keep only the most recent MAX_EVENTS.
+ * Used to prevent unbounded memory growth from event accumulation.
+ */
+export function trimEvents(events: ToolEvent[]): ToolEvent[] {
+  if (events.length > MAX_EVENTS) {
+    return events.slice(-MAX_EVENTS);
+  }
+  return events;
+}
+
 export async function loadState(): Promise<PersistedState | null> {
   const file = Bun.file(STATE_FILE);
   if (!(await file.exists())) {
