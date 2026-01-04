@@ -240,15 +240,18 @@ async function main() {
         });
       },
       onIterationComplete: (iteration, duration, commits) => {
-        // Update the separator event for this iteration with duration/commits
-        stateSetters.setState((prev) => ({
-          ...prev,
-          events: prev.events.map((event) =>
-            event.type === "separator" && event.iteration === iteration
-              ? { ...event, duration, commitCount: commits }
-              : event
-          ),
-        }));
+        // Mutate the separator event in-place to avoid array allocation from .map()
+        stateSetters.setState((prev) => {
+          for (const event of prev.events) {
+            if (event.type === "separator" && event.iteration === iteration) {
+              event.duration = duration;
+              event.commitCount = commits;
+              break;
+            }
+          }
+          // Return same events array reference - mutation is sufficient to trigger re-render
+          return { ...prev };
+        });
         // Update persisted state with the new iteration time
         stateToUse.iterationTimes.push(duration);
         saveState(stateToUse);

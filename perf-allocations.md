@@ -67,7 +67,7 @@ Every render:
 
 - [x] In `onEvent` callback: push to existing array instead of spread `[...prev.events, event]`
 - [x] In `onEvent` callback: trim in-place with `splice()` instead of `slice()` creating new array
-- [ ] In `onIterationComplete` callback: mutate existing separator event instead of `.map()` creating new array
+- [x] In `onIterationComplete` callback: mutate existing separator event instead of `.map()` creating new array
 - [ ] Consider using a single mutable events array instead of creating new arrays on each update
 
 ### Phase 4: Fix Header String Allocations
