@@ -86,5 +86,42 @@ describe("state management", () => {
       expect(parsed.iterationTimes).toEqual([60000, 120000]);
       expect(parsed.planFile).toBe("plan.md");
     });
+
+    it("should overwrite existing state with new values", async () => {
+      const firstState: PersistedState = {
+        startTime: 1704067200000,
+        initialCommitHash: "abc123def456789012345678901234567890abcd",
+        iterationTimes: [60000],
+        planFile: "old-plan.md",
+      };
+
+      const secondState: PersistedState = {
+        startTime: 1704153600000, // Different timestamp
+        initialCommitHash: "def456789012345678901234567890abcdef12",
+        iterationTimes: [90000, 120000, 150000],
+        planFile: "new-plan.md",
+      };
+
+      // Save first state
+      await saveState(firstState);
+
+      // Save second state (should overwrite)
+      await saveState(secondState);
+
+      // Load and verify the second state is what's persisted
+      const loaded = await loadState();
+
+      expect(loaded).not.toBeNull();
+      expect(loaded!.startTime).toBe(secondState.startTime);
+      expect(loaded!.initialCommitHash).toBe(secondState.initialCommitHash);
+      expect(loaded!.iterationTimes).toEqual(secondState.iterationTimes);
+      expect(loaded!.planFile).toBe(secondState.planFile);
+
+      // Also verify the first state values are NOT present
+      expect(loaded!.startTime).not.toBe(firstState.startTime);
+      expect(loaded!.initialCommitHash).not.toBe(firstState.initialCommitHash);
+      expect(loaded!.iterationTimes).not.toEqual(firstState.iterationTimes);
+      expect(loaded!.planFile).not.toBe(firstState.planFile);
+    });
   });
 });

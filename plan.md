@@ -126,7 +126,7 @@ Comprehensive test suite for the Ralph TUI harness using Bun's built-in test run
   - Save state, read file, verify valid JSON structure
   - Verify all fields present: `startTime`, `initialCommitHash`, `iterationTimes`, `planFile`
 
-- [ ] **4.4** Test `saveState()` overwrites existing state:
+- [x] **4.4** Test `saveState()` overwrites existing state:
   - Save state twice with different values
   - Verify second state is what's persisted
 
