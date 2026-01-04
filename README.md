@@ -7,14 +7,11 @@ AI agent loop for autonomous task execution. Reads a plan, picks one task, compl
 ## Quick Start
 
 ```bash
-# Install globally from npm
-bun install -g opencode-ralph
-
-# Or install from source
+# Install from source
 git clone https://github.com/ghuntley/opencode-ralph.git
 cd opencode-ralph
 bun install
-bun install -g .  # makes 'ralph' available globally
+bun add -g $PWD  # makes 'ralph' available globally
 
 # Run in any project directory
 ralph
