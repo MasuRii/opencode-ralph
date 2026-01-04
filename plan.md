@@ -187,7 +187,7 @@ Comprehensive test suite for the Ralph TUI harness using Bun's built-in test run
   - Should replace with `options.planFile`
   - Multiple `{plan}` occurrences should all be replaced
 
-- [ ] **7.2** Test `buildPrompt()` with custom prompt:
+- [x] **7.2** Test `buildPrompt()` with custom prompt:
   - Given custom `options.prompt`
   - Should use custom prompt instead of default
 

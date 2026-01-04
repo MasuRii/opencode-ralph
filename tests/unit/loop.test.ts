@@ -36,6 +36,31 @@ describe("buildPrompt", () => {
       expect(result).toBe("Read docs/my-plan.md now.");
     });
   });
+
+  describe("custom prompt", () => {
+    it("should use custom prompt instead of default", () => {
+      const customPrompt = "Custom instruction: process {plan} file.";
+      const options = createOptions({
+        prompt: customPrompt,
+      });
+      const result = buildPrompt(options);
+      // Verify the custom prompt is used (with {plan} substituted)
+      expect(result).toBe("Custom instruction: process plan.md file.");
+      // Verify it's NOT the default prompt
+      expect(result).not.toContain("READ all of");
+      expect(result).not.toContain("Pick ONE task");
+    });
+
+    it("should preserve custom prompt content exactly except for {plan} placeholder", () => {
+      const customPrompt = "Do exactly this: {plan} - no more, no less.";
+      const options = createOptions({
+        planFile: "tasks.md",
+        prompt: customPrompt,
+      });
+      const result = buildPrompt(options);
+      expect(result).toBe("Do exactly this: tasks.md - no more, no less.");
+    });
+  });
 });
 
 describe("parseModel", () => {
