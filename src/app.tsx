@@ -1,5 +1,5 @@
-import { render, useKeyboard } from "@opentui/solid";
-import { createSignal, onCleanup, Setter } from "solid-js";
+import { render, useKeyboard, useRenderer } from "@opentui/solid";
+import { createSignal, onCleanup, onMount, Setter } from "solid-js";
 import { Header } from "./components/header";
 import { Log } from "./components/log";
 import { Footer } from "./components/footer";
@@ -7,6 +7,7 @@ import { PausedOverlay } from "./components/paused";
 import type { LoopState, LoopOptions, PersistedState, ToolEvent } from "./state";
 import { colors } from "./components/colors";
 import { calculateEta } from "./util/time";
+import { log } from "./util/log";
 
 type AppProps = {
   options: LoopOptions;
@@ -35,6 +36,9 @@ export type StartAppResult = {
 let globalSetState: Setter<LoopState> | null = null;
 let globalUpdateIterationTimes: ((times: number[]) => void) | null = null;
 
+// Mount synchronization - resolves when App component mounts
+let mountResolve: (() => void) | null = null;
+
 /**
  * Main App component with state signals.
  * Manages LoopState and elapsed time, rendering the full TUI layout.
@@ -44,26 +48,48 @@ let globalUpdateIterationTimes: ((times: number[]) => void) | null = null;
  * along with state setters for external updates.
  *
  * @param props - The application props including options, persisted state, and quit handler
- * @returns StartAppResult with exitPromise and stateSetters
+ * @returns Promise<StartAppResult> with exitPromise and stateSetters
  */
-export function startApp(props: AppProps): StartAppResult {
+export async function startApp(props: AppProps): Promise<StartAppResult> {
+  log("app", "startApp called");
+  
   // Create a mutable reference to iteration times that can be updated externally
   let iterationTimesRef = [...props.persistedState.iterationTimes];
   
-  const exitPromise = new Promise<void>((resolve) => {
-    const onQuit = () => {
-      props.onQuit();
-      resolve();
-    };
-
-    render(
-      () => <App {...props} onQuit={onQuit} iterationTimesRef={iterationTimesRef} />,
-      {
-        targetFps: 30,
-        exitOnCtrlC: false,
-      }
-    );
+  // Create mount promise to wait for component initialization
+  const mountPromise = new Promise<void>((resolve) => {
+    mountResolve = resolve;
   });
+  
+  // Create exit promise with resolver
+  let exitResolve!: () => void;
+  const exitPromise = new Promise<void>((resolve) => {
+    exitResolve = resolve;
+  });
+  
+  const onQuit = () => {
+    log("app", "onQuit called");
+    props.onQuit();
+    exitResolve();
+  };
+
+  log("app", "Calling render()");
+  
+  // Await render to ensure CLI renderer is fully initialized
+  await render(
+    () => <App {...props} onQuit={onQuit} iterationTimesRef={iterationTimesRef} />,
+    {
+      targetFps: 15, // Reduced from 30 to lower CPU usage
+      exitOnCtrlC: false,
+    }
+  );
+  
+  log("app", "render() completed, waiting for component mount");
+  
+  // Wait for component to mount so globalSetState is available
+  await mountPromise;
+  
+  log("app", "Component mounted, state setters ready");
 
   // Return state setters that will be available after render
   const stateSetters: AppStateSetters = {
@@ -71,6 +97,7 @@ export function startApp(props: AppProps): StartAppResult {
       if (globalSetState) {
         return globalSetState(update);
       }
+      log("app", "WARNING: setState called but globalSetState is null");
       return {} as LoopState;
     },
     updateIterationTimes: (times) => {
@@ -86,13 +113,19 @@ export function startApp(props: AppProps): StartAppResult {
 }
 
 export function App(props: AppProps) {
+  // Get renderer for cleanup on quit
+  const renderer = useRenderer();
+  
   // State signal for loop state
+  // Initialize iteration to length + 1 since we're about to start the next iteration
   const [state, setState] = createSignal<LoopState>({
     status: "starting",
-    iteration: props.persistedState.iterationTimes.length,
+    iteration: props.persistedState.iterationTimes.length + 1,
     tasksComplete: 0,
     totalTasks: 0,
     commits: 0,
+    linesAdded: 0,
+    linesRemoved: 0,
     events: [],
   });
 
@@ -104,6 +137,15 @@ export function App(props: AppProps) {
   // Export the state setter to module scope for external access
   globalSetState = setState;
   globalUpdateIterationTimes = (times: number[]) => setIterationTimes(times);
+  
+  // Signal that component is mounted and state setters are ready
+  onMount(() => {
+    log("app", "App component mounted");
+    if (mountResolve) {
+      mountResolve();
+      mountResolve = null; // Clean up
+    }
+  });
 
   // Track elapsed time from the persisted start time
   const [elapsed, setElapsed] = createSignal(
@@ -151,20 +193,27 @@ export function App(props: AppProps) {
 
   // Keyboard handling
   useKeyboard((e) => {
+    log("app", "Keyboard event", { name: e.name, ctrl: e.ctrl, meta: e.meta });
+    
     // p key: toggle pause
     if (e.name === "p" && !e.ctrl && !e.meta) {
+      log("app", "Toggle pause");
       togglePause();
       return;
     }
 
     // q key: quit
     if (e.name === "q" && !e.ctrl && !e.meta) {
+      log("app", "Quit via 'q' key");
+      renderer.destroy();
       props.onQuit();
       return;
     }
 
     // Ctrl+C: quit
     if (e.name === "c" && e.ctrl) {
+      log("app", "Quit via Ctrl+C");
+      renderer.destroy();
       props.onQuit();
       return;
     }
@@ -184,11 +233,13 @@ export function App(props: AppProps) {
         totalTasks={state().totalTasks}
         eta={eta()}
       />
-      <Log events={state().events} />
+      <Log events={state().events} isRunning={state().status === "running"} />
       <Footer
         commits={state().commits}
         elapsed={elapsed()}
         paused={state().status === "paused"}
+        linesAdded={state().linesAdded}
+        linesRemoved={state().linesRemoved}
       />
       <PausedOverlay visible={state().status === "paused"} />
     </box>
