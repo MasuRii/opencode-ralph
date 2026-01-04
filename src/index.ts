@@ -2,12 +2,19 @@
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import { acquireLock, releaseLock } from "./lock";
-import { loadState, saveState, PersistedState, LoopOptions, trimEvents, LoopState, ToolEvent } from "./state";
+import { loadState, saveState, PersistedState, LoopOptions, trimEventsInPlace, LoopState, ToolEvent } from "./state";
 import { confirm } from "./prompt";
 import { getHeadHash, getDiffStats, getCommitsSince } from "./git";
 import { startApp } from "./app";
 import { runLoop } from "./loop";
 import { initLog, log } from "./util/log";
+
+// When run via the bin wrapper, RALPH_USER_CWD contains the user's actual working directory
+// Change back to it so plan.md and other paths resolve correctly
+const userCwd = process.env.RALPH_USER_CWD;
+if (userCwd) {
+  process.chdir(userCwd);
+}
 
 /**
  * Creates a batched state updater that coalesces rapid setState calls.
@@ -225,9 +232,12 @@ async function main() {
       },
       onEvent: (event) => {
         // Debounce event updates to batch rapid events within 50ms window
-        batchedUpdater.queueUpdate((prev) => ({
-          events: trimEvents([...prev.events, event]),
-        }));
+        // Mutate existing array in-place to avoid allocations
+        batchedUpdater.queueUpdate((prev) => {
+          prev.events.push(event);
+          trimEventsInPlace(prev.events);
+          return { events: prev.events };
+        });
       },
       onIterationComplete: (iteration, duration, commits) => {
         // Update the separator event for this iteration with duration/commits

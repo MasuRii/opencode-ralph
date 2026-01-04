@@ -42,6 +42,17 @@ export function trimEvents(events: ToolEvent[]): ToolEvent[] {
   return events;
 }
 
+/**
+ * Trims an events array in-place to keep only the most recent MAX_EVENTS.
+ * Mutates the array directly to avoid allocations.
+ */
+export function trimEventsInPlace(events: ToolEvent[]): void {
+  if (events.length > MAX_EVENTS) {
+    // Remove excess events from the beginning
+    events.splice(0, events.length - MAX_EVENTS);
+  }
+}
+
 export async function loadState(): Promise<PersistedState | null> {
   const file = Bun.file(STATE_FILE);
   if (!(await file.exists())) {

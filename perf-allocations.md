@@ -65,8 +65,8 @@ Every render:
 
 ### Phase 3: Fix Event Array Mutations (index.ts)
 
-- [ ] In `onEvent` callback: push to existing array instead of spread `[...prev.events, event]`
-- [ ] In `onEvent` callback: trim in-place with `splice()` instead of `slice()` creating new array
+- [x] In `onEvent` callback: push to existing array instead of spread `[...prev.events, event]`
+- [x] In `onEvent` callback: trim in-place with `splice()` instead of `slice()` creating new array
 - [ ] In `onIterationComplete` callback: mutate existing separator event instead of `.map()` creating new array
 - [ ] Consider using a single mutable events array instead of creating new arrays on each update
 
