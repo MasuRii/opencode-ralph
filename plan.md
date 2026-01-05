@@ -307,10 +307,16 @@ Match opencode's render configuration for consistency.
 
 Ensure clean shutdown when 'q' is pressed.
 
-- [ ] **6.1** Review current quit flow:
+- [x] **6.1** Review current quit flow:
   - `useKeyboard` handler calls `renderer.destroy()` and `props.onQuit()`
   - `onQuit` callback aborts the loop and resolves `exitPromise`
   - Verify this chain is being executed
+  
+  **Completed (2025-01-05):**
+  - Reviewed quit flow chain: `useKeyboard` callback → `renderer.destroy()` → `props.onQuit()` → `exitResolve()` → `exitPromise` resolves → finally block → `process.exit(0)`
+  - **Fixed**: Removed `(renderer as any).destroy?.()` cast - `destroy()` is properly typed on `CliRenderer` class
+  - **Added**: `renderer.setTerminalTitle("")` call before `destroy()` to reset window title (matches OpenCode pattern in exit.tsx)
+  - Quit flow is correctly implemented and the chain executes as expected
 
 - [ ] **6.2** Ensure `renderer.destroy()` is called correctly:
   - Current code: `(renderer as any).destroy?.()`

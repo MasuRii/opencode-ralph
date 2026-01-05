@@ -310,7 +310,9 @@ export function App(props: AppProps) {
     // q key: quit
     if (key === "q" && !e.ctrl && !e.meta) {
       log("app", "Quit via 'q' key");
-      (renderer as any).destroy?.();
+      // Reset terminal title before destroying renderer (matches OpenCode pattern)
+      renderer.setTerminalTitle("");
+      renderer.destroy();
       props.onQuit();
       return;
     }
@@ -318,7 +320,9 @@ export function App(props: AppProps) {
     // Ctrl+C: quit
     if (key === "c" && e.ctrl) {
       log("app", "Quit via Ctrl+C");
-      (renderer as any).destroy?.();
+      // Reset terminal title before destroying renderer (matches OpenCode pattern)
+      renderer.setTerminalTitle("");
+      renderer.destroy();
       props.onQuit();
       return;
     }
