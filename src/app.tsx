@@ -93,7 +93,8 @@ log("app", "Calling render()");
       />
     ),
     {
-      targetFps: 15, // Reduced from 30 to lower CPU usage
+      targetFps: 30, // Balanced FPS: OpenCode uses 60, but 30 is sufficient for ralph's logging TUI
+      gatherStats: false, // Disable stats gathering for performance (matches OpenCode)
       exitOnCtrlC: false,
       useKittyKeyboard: {}, // Enable Kitty keyboard protocol for improved key event handling
     }

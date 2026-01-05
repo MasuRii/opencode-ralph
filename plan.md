@@ -279,14 +279,27 @@ Match opencode's render configuration for consistency.
   2. **gatherStats**: OpenCode explicitly sets `false`, Ralph doesn't set it (defaults to false)
   3. **consoleOptions**: OpenCode has clipboard keybindings for Ctrl+Y copy-selection; Ralph doesn't need this for its simple logging TUI
 
-- [ ] **5.2** Update ralph's render options:
+- [x] **5.2** Update ralph's render options:
   - Increase `targetFps` to 30 or 60 (test performance impact)
   - Add `useKittyKeyboard: {}`
   - Keep `exitOnCtrlC: false` (we handle quit manually)
+  
+  **Completed (2025-01-05):**
+  - Changed `targetFps` from 15 to 30 (balanced: smoother than 15, less CPU than 60)
+  - Added `gatherStats: false` for performance (matches OpenCode pattern)
+  - `useKittyKeyboard: {}` already present from Phase 3
+  - `exitOnCtrlC: false` already present
+  - TypeScript compiles successfully
 
-- [ ] **5.3** Consider adding console options:
+- [x] **5.3** Consider adding console options:
   - OpenCode has copy-selection keybindings
   - May not be necessary for ralph but worth noting
+  
+  **Decision (2025-01-05):**
+  - **Not implementing** - Ralph's TUI is a simple read-only logging display
+  - No text selection or copy functionality is needed for this use case
+  - OpenCode's `consoleOptions` with `Ctrl+Y` copy-selection is for their interactive console component
+  - If copy-paste is needed in the future, this can be revisited
 
 ---
 
