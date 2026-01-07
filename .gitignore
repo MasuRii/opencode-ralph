@@ -1,6 +1,5 @@
 node_modules/
 dist/
-bin/
 .ralph-lock
 .ralph-state.json
 .ralph-pause
