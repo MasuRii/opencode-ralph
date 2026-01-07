@@ -387,10 +387,15 @@ export async function runLoop(
         });
 
         // Parse plan and update task counts (10.12)
-        log("loop", "Parsing plan file");
-        const { done, total } = await parsePlan(options.planFile);
-        log("loop", "Plan parsed", { done, total });
-        callbacks.onTasksUpdated(done, total);
+        // Skip plan file validation in debug mode - plan file is optional
+        if (!options.debug) {
+          log("loop", "Parsing plan file");
+          const { done, total } = await parsePlan(options.planFile);
+          log("loop", "Plan parsed", { done, total });
+          callbacks.onTasksUpdated(done, total);
+        } else {
+          log("loop", "Debug mode: skipping plan file validation");
+        }
 
         // Parse model and build prompt before session creation
         const promptText = await buildPrompt(options);

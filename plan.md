@@ -323,7 +323,7 @@
 - [x] Pass debug flag from CLI to LoopOptions
 
 #### Debug Mode Behavior
-- [ ] Skip plan file validation when debug mode enabled
+- [x] Skip plan file validation when debug mode enabled
 - [ ] Skip automatic loop start in debug mode
 - [ ] Set initial state to idle in debug mode
 
