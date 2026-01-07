@@ -463,6 +463,7 @@ export async function runLoop(
         if (event.type === "session.idle" && event.properties.sessionID === sessionId) {
           log("loop", "Session idle, breaking event loop");
           sessionActive = false;
+          callbacks.onSessionEnded?.(sessionId);
           break;
         }
 
@@ -479,6 +480,7 @@ export async function runLoop(
           
           log("loop", "Session error", { errorMessage });
           sessionActive = false;
+          callbacks.onSessionEnded?.(sessionId);
           callbacks.onError(errorMessage);
           throw new Error(errorMessage);
         }

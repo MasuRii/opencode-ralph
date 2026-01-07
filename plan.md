@@ -16,7 +16,7 @@
 - [x] Implement `sendMessage` function in `src/loop.ts` using `client.session.prompt()`
 - [x] Add guard in `sendMessage` to check for active session before sending
 - [x] Call `onSessionCreated` callback after session creation in `runLoop`
-- [ ] Call `onSessionEnded` callback when session ends in `runLoop`
+- [x] Call `onSessionEnded` callback when session ends in `runLoop`
 - [ ] Clear session fields in `LoopState` when `onSessionEnded` fires
 
 #### Steering UI State
