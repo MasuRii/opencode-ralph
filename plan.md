@@ -481,7 +481,9 @@
 - [x] Create `addTokens()` function to increment counters
 
 #### SSE Event Integration
-- [ ] Identify token event name in current SDK (e.g., `step.finish`)
+- [x] Identify token event name in current SDK (e.g., `step.finish`)
+      <!-- Token event is `step-finish` part type in `message.part.updated` events.
+           Structure: StepFinishPart.tokens = { input, output, reasoning, cache: { read, write } } -->
 - [ ] Hook into SSE event handler in loop
 - [ ] Extract token counts from event payload
 - [ ] Call `addTokens()` with extracted values
