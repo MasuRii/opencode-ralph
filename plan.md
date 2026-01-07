@@ -226,11 +226,11 @@
 - [x] Scroll selected item into view
 
 #### Default Commands
-- [ ] Create `src/lib/keymap.ts` file with centralized keybind definitions
-- [ ] Define `copyAttach` keybind in keymap
-- [ ] Define `terminalConfig` keybind in keymap
-- [ ] Define `toggleTasks` keybind in keymap
-- [ ] Define `togglePause` keybind in keymap
+- [x] Create `src/lib/keymap.ts` file with centralized keybind definitions
+- [x] Define `copyAttach` keybind in keymap
+- [x] Define `terminalConfig` keybind in keymap
+- [x] Define `toggleTasks` keybind in keymap
+- [x] Define `togglePause` keybind in keymap
 - [ ] Register "Copy attach command" action
 - [ ] Register "Choose default terminal" action
 - [ ] Register "Toggle tasks panel" action
