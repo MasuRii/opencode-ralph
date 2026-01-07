@@ -464,8 +464,8 @@ Allow Ralph to connect to an existing/running OpenCode server via `--server` URL
 
 ### 8.1 Test that createOpencodeServer is not called when serverUrl provided
 
-- [ ] **8.1.1** Open `tests/integration/ralph-flow.test.ts`
-- [ ] **8.1.2** Add a new test case:
+- [x] **8.1.1** Open `tests/integration/ralph-flow.test.ts`
+- [x] **8.1.2** Add a new test case:
   ```typescript
   it("should not call createOpencodeServer when serverUrl is provided", async () => {
     // Mock fetch for health check
@@ -506,11 +506,11 @@ Allow Ralph to connect to an existing/running OpenCode server via `--server` URL
     globalThis.fetch = originalFetch;
   });
   ```
-- [ ] **8.1.3** Run `bun test tests/integration/ralph-flow.test.ts` to verify test passes
+- [x] **8.1.3** Run `bun test tests/integration/ralph-flow.test.ts` to verify test passes
 
 ### 8.2 Test connection error handling
 
-- [ ] **8.2.1** Add another test case:
+- [x] **8.2.1** Add another test case:
   ```typescript
   it("should call onError when serverUrl is unreachable", async () => {
     const originalFetch = globalThis.fetch;
@@ -543,7 +543,7 @@ Allow Ralph to connect to an existing/running OpenCode server via `--server` URL
     globalThis.fetch = originalFetch;
   });
   ```
-- [ ] **8.2.2** Run `bun test tests/integration/ralph-flow.test.ts` to verify test passes
+- [x] **8.2.2** Run `bun test tests/integration/ralph-flow.test.ts` to verify test passes
 
 ---
 

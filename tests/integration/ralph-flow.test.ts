@@ -9,6 +9,12 @@ const mockSessionCreate = mock(() =>
   Promise.resolve({ data: { id: "test-session-123" } })
 );
 const mockSessionPrompt = mock(() => Promise.resolve());
+const mockCreateOpencodeServer = mock(() =>
+  Promise.resolve({
+    url: "http://localhost:4190",
+    close: mock(() => {}),
+  })
+);
 
 // Mock event stream that simulates a complete iteration
 function createMockEventStream() {
@@ -74,12 +80,7 @@ const mockEventSubscribe = mock(() => Promise.resolve(createMockEventStream()));
 
 // Mock the SDK module
 mock.module("@opencode-ai/sdk", () => ({
-  createOpencodeServer: mock(() =>
-    Promise.resolve({
-      url: "http://localhost:4190",
-      close: mock(() => {}),
-    })
-  ),
+  createOpencodeServer: mockCreateOpencodeServer,
   createOpencodeClient: mock(() => ({
     session: {
       create: mockSessionCreate,
@@ -156,6 +157,7 @@ describe("ralph flow integration", () => {
     mockSessionCreate.mockClear();
     mockSessionPrompt.mockClear();
     mockEventSubscribe.mockClear();
+    mockCreateOpencodeServer.mockClear();
   });
 
   afterEach(async () => {
@@ -595,5 +597,76 @@ describe("ralph flow integration", () => {
     expect(persistedState.startTime).toBeGreaterThan(0);
     expect(persistedState.initialCommitHash).toBe("abc123");
     expect(persistedState.planFile).toBe(testPlanFile);
+  });
+
+  it("should not call createOpencodeServer when serverUrl is provided", async () => {
+    // Mock fetch for health check
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = mock(() => 
+      Promise.resolve(new Response(JSON.stringify({ healthy: true }), { status: 200 }))
+    ) as unknown as typeof fetch;
+
+    const options: LoopOptions = {
+      planFile: testPlanFile,
+      model: "anthropic/claude-sonnet-4",
+      prompt: "Test prompt for {plan}",
+      serverUrl: "http://localhost:4190",
+      serverTimeoutMs: 1000,
+    };
+
+    const persistedState: PersistedState = {
+      startTime: Date.now(),
+      initialCommitHash: "abc123",
+      iterationTimes: [],
+      planFile: testPlanFile,
+    };
+
+    const callbacks = createTestCallbacks();
+    const controller = new AbortController();
+
+    // Create .ralph-done to stop immediately
+    cleanupFiles.push(".ralph-done");
+    await Bun.write(".ralph-done", "");
+
+    await runLoop(options, persistedState, callbacks, controller.signal);
+
+    // Verify createOpencodeServer was NOT called (since serverUrl was provided)
+    expect(mockCreateOpencodeServer).not.toHaveBeenCalled();
+
+    // Verify onComplete was called (due to .ralph-done file)
+    expect(callbackOrder).toContain("onComplete");
+
+    globalThis.fetch = originalFetch;
+  });
+
+  it("should throw error when serverUrl is unreachable", async () => {
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = mock(() => Promise.reject(new Error("Network error"))) as unknown as typeof fetch;
+
+    const options: LoopOptions = {
+      planFile: testPlanFile,
+      model: "anthropic/claude-sonnet-4",
+      prompt: "Test prompt for {plan}",
+      serverUrl: "http://unreachable:4190",
+      serverTimeoutMs: 100,
+    };
+
+    const persistedState: PersistedState = {
+      startTime: Date.now(),
+      initialCommitHash: "abc123",
+      iterationTimes: [],
+      planFile: testPlanFile,
+    };
+
+    const callbacks = createTestCallbacks();
+    const controller = new AbortController();
+
+    await expect(runLoop(options, persistedState, callbacks, controller.signal))
+      .rejects.toThrow("Cannot connect");
+
+    // Verify onError was called
+    expect(callbackOrder.some(c => c.startsWith("onError:"))).toBe(true);
+
+    globalThis.fetch = originalFetch;
   });
 });
