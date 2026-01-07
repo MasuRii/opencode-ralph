@@ -6,8 +6,10 @@ import { Log } from "./components/log";
 import { Footer } from "./components/footer";
 import { PausedOverlay } from "./components/paused";
 import { SteeringOverlay } from "./components/steering";
-import { DialogProvider, DialogStack } from "./context/DialogContext";
-import { CommandProvider } from "./context/CommandContext";
+import { DialogProvider, DialogStack, useDialog, useInputFocus } from "./context/DialogContext";
+import { CommandProvider, useCommand, type CommandOption } from "./context/CommandContext";
+import { DialogSelect } from "./ui/DialogSelect";
+import { keymap, matchesKeybind } from "./lib/keymap";
 import type { LoopState, LoopOptions, PersistedState } from "./state";
 import { colors } from "./components/colors";
 import { calculateEta } from "./util/time";
@@ -150,9 +152,6 @@ export function App(props: AppProps) {
   const [commandMode, setCommandMode] = createSignal(false);
   const [commandInput, setCommandInput] = createSignal("");
 
-  // Helper to check if any input is focused (dialogs, steering mode, etc.)
-  const isInputFocused = () => commandMode();
-
   // Signal to track iteration times (for ETA calculation)
   const [iterationTimes, setIterationTimes] = createSignal<number[]>(
     props.iterationTimesRef || [...props.persistedState.iterationTimes]
@@ -219,6 +218,69 @@ export function App(props: AppProps) {
   let keyboardEventNotified = false;
 
   /**
+   * Show the command palette dialog.
+   * Converts registered commands to SelectOptions for the dialog.
+   */
+  const showCommandPalette = () => {
+    // This function will be passed to CommandProvider's onShowPalette callback
+    // The actual implementation uses the dialog context inside AppContent
+  };
+
+  return (
+    <DialogProvider>
+      <CommandProvider onShowPalette={showCommandPalette}>
+        <AppContent
+          state={state}
+          setState={setState}
+          commandMode={commandMode}
+          setCommandMode={setCommandMode}
+          setCommandInput={setCommandInput}
+          eta={eta}
+          elapsed={elapsed}
+          togglePause={togglePause}
+          renderer={renderer}
+          onQuit={props.onQuit}
+          onKeyboardEvent={props.onKeyboardEvent}
+          keyboardEventNotified={keyboardEventNotified}
+          setKeyboardEventNotified={(v: boolean) => { keyboardEventNotified = v; }}
+        />
+      </CommandProvider>
+    </DialogProvider>
+  );
+}
+
+/**
+ * Props for the inner AppContent component.
+ */
+type AppContentProps = {
+  state: () => LoopState;
+  setState: Setter<LoopState>;
+  commandMode: () => boolean;
+  setCommandMode: (v: boolean) => void;
+  setCommandInput: (v: string) => void;
+  eta: () => number | null;
+  elapsed: () => number;
+  togglePause: () => Promise<void>;
+  renderer: ReturnType<typeof useRenderer>;
+  onQuit: () => void;
+  onKeyboardEvent?: () => void;
+  keyboardEventNotified: boolean;
+  setKeyboardEventNotified: (v: boolean) => void;
+};
+
+/**
+ * Inner component that uses context hooks for dialogs and commands.
+ * Separated from App to be inside the context providers.
+ */
+function AppContent(props: AppContentProps) {
+  const dialog = useDialog();
+  const command = useCommand();
+  const { isInputFocused: dialogInputFocused } = useInputFocus();
+
+  // Combined check for any input being focused
+  const isInputFocused = () => props.commandMode() || dialogInputFocused();
+
+  /**
    * Detect if the `:` (colon) key was pressed.
    * Handles multiple keyboard configurations:
    * - Direct `:` character (Kitty protocol or non-US keyboards)
@@ -235,43 +297,79 @@ export function App(props: AppProps) {
     return false;
   };
 
-  // Keyboard handling
+  /**
+   * Show the command palette dialog with all registered commands.
+   */
+  const showCommandPalette = () => {
+    const commands = command.getCommands();
+    const options = commands.map((cmd): CommandOption & { onSelect: () => void } => ({
+      title: cmd.title,
+      value: cmd.value,
+      description: cmd.description,
+      keybind: cmd.keybind,
+      disabled: cmd.disabled,
+      onSelect: cmd.onSelect,
+    }));
+
+    dialog.show(() => (
+      <DialogSelect
+        title="Command Palette"
+        placeholder="Type to search commands..."
+        options={options}
+        onSelect={(opt) => {
+          // Find and execute the command
+          const cmd = commands.find(c => c.value === opt.value);
+          cmd?.onSelect();
+        }}
+        onCancel={() => {}}
+        borderColor={colors.purple}
+      />
+    ));
+  };
+
+  // Keyboard handling - now inside context providers
   useKeyboard((e: KeyEvent) => {
     // Notify caller that OpenTUI keyboard handling is working
-    // This allows the caller to skip setting up a fallback stdin handler
-    if (!keyboardEventNotified && props.onKeyboardEvent) {
-      keyboardEventNotified = true;
+    if (!props.keyboardEventNotified && props.onKeyboardEvent) {
+      props.setKeyboardEventNotified(true);
       props.onKeyboardEvent();
     }
 
     // Skip if any input is focused (dialogs, steering mode, etc.)
     if (isInputFocused()) return;
-    
+
     const key = e.name.toLowerCase();
+
+    // Ctrl+P: open command palette
+    if (matchesKeybind(e, keymap.commandPalette)) {
+      log("app", "Command palette opened via Ctrl+P");
+      showCommandPalette();
+      return;
+    }
 
     // : key: open steering mode (requires active session)
     if (isColonKey(e) && !e.ctrl && !e.meta) {
-      const currentState = state();
+      const currentState = props.state();
       // Only allow steering when there's an active session
       if (currentState.sessionId) {
         log("app", "Steering mode opened via ':' key");
-        setCommandMode(true);
-        setCommandInput("");
+        props.setCommandMode(true);
+        props.setCommandInput("");
       }
       return;
     }
 
-    // p key: toggle pause
-    if (key === "p" && !e.ctrl && !e.meta) {
-      togglePause();
+    // p key: toggle pause (only when no modifiers)
+    if (key === "p" && !e.ctrl && !e.meta && !e.shift) {
+      props.togglePause();
       return;
     }
 
     // q key: quit
     if (key === "q" && !e.ctrl && !e.meta) {
       log("app", "Quit requested via 'q' key");
-      renderer.setTerminalTitle("");
-      renderer.destroy();
+      props.renderer.setTerminalTitle("");
+      props.renderer.destroy();
       props.onQuit();
       return;
     }
@@ -279,57 +377,53 @@ export function App(props: AppProps) {
     // Ctrl+C: quit
     if (key === "c" && e.ctrl) {
       log("app", "Quit requested via Ctrl+C");
-      renderer.setTerminalTitle("");
-      renderer.destroy();
+      props.renderer.setTerminalTitle("");
+      props.renderer.destroy();
       props.onQuit();
       return;
     }
   });
 
   return (
-    <DialogProvider>
-      <CommandProvider>
-        <box
-          flexDirection="column"
-          width="100%"
-          height="100%"
-          backgroundColor={colors.bgDark}
-        >
-          <Header
-            status={state().status}
-            iteration={state().iteration}
-            tasksComplete={state().tasksComplete}
-            totalTasks={state().totalTasks}
-            eta={eta()}
-          />
-          <Log events={state().events} isIdle={state().isIdle} errorRetryAt={state().errorRetryAt} />
-          <Footer
-            commits={state().commits}
-            elapsed={elapsed()}
-            paused={state().status === "paused"}
-            linesAdded={state().linesAdded}
-            linesRemoved={state().linesRemoved}
-            sessionActive={!!state().sessionId}
-          />
-          <PausedOverlay visible={state().status === "paused"} />
-          <SteeringOverlay
-            visible={commandMode()}
-            onClose={() => {
-              setCommandMode(false);
-              setCommandInput("");
-            }}
-            onSend={async (message) => {
-              if (globalSendMessage) {
-                log("app", "Sending steering message", { message });
-                await globalSendMessage(message);
-              } else {
-                log("app", "No sendMessage function available");
-              }
-            }}
-          />
-          <DialogStack />
-        </box>
-      </CommandProvider>
-    </DialogProvider>
+    <box
+      flexDirection="column"
+      width="100%"
+      height="100%"
+      backgroundColor={colors.bgDark}
+    >
+      <Header
+        status={props.state().status}
+        iteration={props.state().iteration}
+        tasksComplete={props.state().tasksComplete}
+        totalTasks={props.state().totalTasks}
+        eta={props.eta()}
+      />
+      <Log events={props.state().events} isIdle={props.state().isIdle} errorRetryAt={props.state().errorRetryAt} />
+      <Footer
+        commits={props.state().commits}
+        elapsed={props.elapsed()}
+        paused={props.state().status === "paused"}
+        linesAdded={props.state().linesAdded}
+        linesRemoved={props.state().linesRemoved}
+        sessionActive={!!props.state().sessionId}
+      />
+      <PausedOverlay visible={props.state().status === "paused"} />
+      <SteeringOverlay
+        visible={props.commandMode()}
+        onClose={() => {
+          props.setCommandMode(false);
+          props.setCommandInput("");
+        }}
+        onSend={async (message) => {
+          if (globalSendMessage) {
+            log("app", "Sending steering message", { message });
+            await globalSendMessage(message);
+          } else {
+            log("app", "No sendMessage function available");
+          }
+        }}
+      />
+      <DialogStack />
+    </box>
   );
 }

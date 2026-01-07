@@ -237,9 +237,9 @@
 - [ ] Register "Pause/Resume" action
 
 #### Ctrl+P Handler
-- [ ] Add Ctrl+P keyboard handler in `src/app.tsx`
-- [ ] Check `isInputFocused()` before opening palette
-- [ ] Call `command.show()` to open palette
+- [x] Add Ctrl+P keyboard handler in `src/app.tsx`
+- [x] Check `isInputFocused()` before opening palette
+- [x] Call `command.show()` to open palette
 
 #### App Integration
 - [x] Wrap App with `CommandProvider` in `src/app.tsx`
