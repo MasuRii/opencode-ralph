@@ -143,8 +143,8 @@ Allow Ralph to connect to an existing/running OpenCode server via `--server` URL
 
 ### 3.1 Create ServerHealthResult type
 
-- [ ] **3.1.1** Open `src/loop.ts`
-- [ ] **3.1.2** Add the following type after `isLocalhost` function:
+- [x] **3.1.1** Open `src/loop.ts`
+- [x] **3.1.2** Add the following type after `isLocalhost` function:
   ```typescript
   /**
    * Result of a server health check.
@@ -156,7 +156,7 @@ Allow Ralph to connect to an existing/running OpenCode server via `--server` URL
 
 ### 3.2 Create checkServerHealth function
 
-- [ ] **3.2.1** Add the following function after `ServerHealthResult` type:
+- [x] **3.2.1** Add the following function after `ServerHealthResult` type:
   ```typescript
   /**
    * Check if a server is healthy.
@@ -190,14 +190,14 @@ Allow Ralph to connect to an existing/running OpenCode server via `--server` URL
     }
   }
   ```
-- [ ] **3.2.2** Run `bun run typecheck` to verify no errors
+- [x] **3.2.2** Run `bun run typecheck` to verify no errors
 
 ### 3.3 Write unit tests for health check
 
-- [ ] **3.3.1** Open `tests/unit/loop.test.ts`
-- [ ] **3.3.2** Export `checkServerHealth` from `src/loop.ts`
-- [ ] **3.3.3** Add import for `checkServerHealth` in test file
-- [ ] **3.3.4** Add the following test suite:
+- [x] **3.3.1** Open `tests/unit/loop.test.ts`
+- [x] **3.3.2** Export `checkServerHealth` from `src/loop.ts`
+- [x] **3.3.3** Add import for `checkServerHealth` in test file
+- [x] **3.3.4** Add the following test suite:
   ```typescript
   describe("checkServerHealth", () => {
     it("should return ok:true when server responds with healthy:true", async () => {
@@ -247,7 +247,7 @@ Allow Ralph to connect to an existing/running OpenCode server via `--server` URL
     });
   });
   ```
-- [ ] **3.3.5** Run `bun test tests/unit/loop.test.ts` to verify tests pass
+- [x] **3.3.5** Run `bun test tests/unit/loop.test.ts` to verify tests pass
 
 ---
 

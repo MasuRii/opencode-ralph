@@ -1,5 +1,5 @@
-import { describe, it, expect } from "bun:test";
-import { buildPrompt, parseModel, validateAndNormalizeServerUrl } from "../../src/loop.js";
+import { describe, it, expect, mock } from "bun:test";
+import { buildPrompt, parseModel, validateAndNormalizeServerUrl, checkServerHealth } from "../../src/loop.js";
 import type { LoopOptions } from "../../src/state.js";
 
 describe("buildPrompt", () => {
@@ -196,5 +196,53 @@ describe("validateAndNormalizeServerUrl", () => {
     it("should reject ws:// protocol", () => {
       expect(() => validateAndNormalizeServerUrl("ws://localhost:4190")).toThrow("Invalid protocol");
     });
+  });
+});
+
+describe("checkServerHealth", () => {
+  it("should return ok:true when server responds with healthy:true", async () => {
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = mock(() => 
+      Promise.resolve(new Response(JSON.stringify({ healthy: true }), { status: 200 }))
+    ) as unknown as typeof fetch;
+    
+    const result = await checkServerHealth("http://localhost:4190", 1000);
+    expect(result).toEqual({ ok: true });
+    
+    globalThis.fetch = originalFetch;
+  });
+
+  it("should return ok:false reason:unhealthy when healthy:false", async () => {
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = mock(() => 
+      Promise.resolve(new Response(JSON.stringify({ healthy: false }), { status: 200 }))
+    ) as unknown as typeof fetch;
+    
+    const result = await checkServerHealth("http://localhost:4190", 1000);
+    expect(result).toEqual({ ok: false, reason: "unhealthy" });
+    
+    globalThis.fetch = originalFetch;
+  });
+
+  it("should return ok:false reason:unhealthy on non-200 response", async () => {
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = mock(() => 
+      Promise.resolve(new Response("error", { status: 500 }))
+    ) as unknown as typeof fetch;
+    
+    const result = await checkServerHealth("http://localhost:4190", 1000);
+    expect(result).toEqual({ ok: false, reason: "unhealthy" });
+    
+    globalThis.fetch = originalFetch;
+  });
+
+  it("should return ok:false reason:unreachable on network error", async () => {
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = mock(() => Promise.reject(new Error("Network error"))) as unknown as typeof fetch;
+    
+    const result = await checkServerHealth("http://localhost:4190", 1000);
+    expect(result).toEqual({ ok: false, reason: "unreachable" });
+    
+    globalThis.fetch = originalFetch;
   });
 });

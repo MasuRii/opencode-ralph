@@ -44,6 +44,45 @@ export function isLocalhost(url: string): boolean {
 }
 
 /**
+ * Result of a server health check.
+ */
+export type ServerHealthResult =
+  | { ok: true }
+  | { ok: false; reason: "unreachable" | "unhealthy" };
+
+/**
+ * Check if a server is healthy.
+ * Composes timeout with optional abort signal for user cancellation.
+ */
+export async function checkServerHealth(
+  url: string,
+  timeoutMs: number,
+  abortSignal?: AbortSignal
+): Promise<ServerHealthResult> {
+  try {
+    const signals: AbortSignal[] = [AbortSignal.timeout(timeoutMs)];
+    if (abortSignal) {
+      signals.push(abortSignal);
+    }
+    
+    const response = await fetch(`${url}/global/health`, {
+      signal: AbortSignal.any(signals),
+    });
+    
+    if (!response.ok) {
+      return { ok: false, reason: "unhealthy" };
+    }
+    
+    const data = await response.json();
+    return data.healthy === true 
+      ? { ok: true } 
+      : { ok: false, reason: "unhealthy" };
+  } catch {
+    return { ok: false, reason: "unreachable" };
+  }
+}
+
+/**
  * Check if an opencode server is already running at the given URL.
  * Uses the /global/health endpoint.
  */
