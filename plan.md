@@ -135,16 +135,16 @@
 ### 2.3 Dialog System (Required by 2.1, 2.2)
 
 #### Context Provider
-- [ ] Create `src/context/DialogContext.tsx` file
-- [ ] Define `DialogComponent` type
-- [ ] Define `DialogContextValue` interface with `show`, `replace`, `clear`, `pop`, `stack`, `hasDialogs`
-- [ ] Create `DialogContext` using `createContext()`
-- [ ] Create `DialogProvider` component with stack signal
-- [ ] Implement `show()` to push dialog onto stack
-- [ ] Implement `replace()` to swap top dialog
-- [ ] Implement `clear()` to empty stack
-- [ ] Implement `pop()` to remove top dialog
-- [ ] Create `useDialog()` hook for consuming context
+- [x] Create `src/context/DialogContext.tsx` file
+- [x] Define `DialogComponent` type
+- [x] Define `DialogContextValue` interface with `show`, `replace`, `clear`, `pop`, `stack`, `hasDialogs`
+- [x] Create `DialogContext` using `createContext()`
+- [x] Create `DialogProvider` component with stack signal
+- [x] Implement `show()` to push dialog onto stack
+- [x] Implement `replace()` to swap top dialog
+- [x] Implement `clear()` to empty stack
+- [x] Implement `pop()` to remove top dialog
+- [x] Create `useDialog()` hook for consuming context
 
 #### Base Dialog Component
 - [ ] Create `src/ui/Dialog.tsx` file
@@ -178,15 +178,15 @@
 - [ ] Call `onDismiss` callback
 
 #### Dialog Stack Renderer
-- [ ] Create `DialogStack` component in `src/context/DialogContext.tsx`
-- [ ] Render all dialogs in stack with proper z-indexing
-- [ ] Only render when `hasDialogs()` is true
+- [x] Create `DialogStack` component in `src/context/DialogContext.tsx`
+- [x] Render all dialogs in stack with proper z-indexing
+- [x] Only render when `hasDialogs()` is true
 
 #### Input Focus Management
-- [ ] Create `inputFocused` signal in DialogContext
-- [ ] Set `inputFocused(true)` when any dialog opens
-- [ ] Set `inputFocused(false)` when all dialogs close
-- [ ] Export `isInputFocused()` accessor
+- [x] Create `inputFocused` signal in DialogContext
+- [x] Set `inputFocused(true)` when any dialog opens
+- [x] Set `inputFocused(false)` when all dialogs close
+- [x] Export `isInputFocused()` accessor
 
 #### App Integration
 - [ ] Wrap App content with `DialogProvider` in `src/app.tsx`
