@@ -678,7 +678,7 @@
 - [x] Test terminal detection on different systems
 
 ### Manual Testing
-- [ ] Verify steering mode sends messages correctly
+- [x] Verify steering mode sends messages correctly
 - [ ] Verify custom prompt file is read
 - [ ] Verify backoff delays work as expected
 - [ ] Verify agent flag passes through to API
