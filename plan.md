@@ -219,11 +219,11 @@
 - [x] Show description text if present
 
 #### Keyboard Navigation
-- [ ] Add ↑/↓ arrow key handlers for selection
-- [ ] Add Enter key to execute selected command
-- [ ] Add Escape key to close palette
-- [ ] Auto-focus search input on open
-- [ ] Scroll selected item into view
+- [x] Add ↑/↓ arrow key handlers for selection
+- [x] Add Enter key to execute selected command
+- [x] Add Escape key to close palette
+- [x] Auto-focus search input on open
+- [x] Scroll selected item into view
 
 #### Default Commands
 - [ ] Create `src/lib/keymap.ts` file with centralized keybind definitions
