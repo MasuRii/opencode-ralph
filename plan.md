@@ -689,5 +689,5 @@
 - [x] Verify themes apply correctly
 - [x] Verify tokens accumulate properly
 - [x] Verify toasts appear and dismiss
-- [ ] Verify clipboard copies on Linux/macOS
+- [x] Verify clipboard copies on Linux/macOS
 - [ ] Verify all keybindings work without conflicts
