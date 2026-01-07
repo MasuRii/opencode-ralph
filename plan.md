@@ -107,7 +107,7 @@
 - [x] Apply delay with `await Bun.sleep(backoffMs)`
 
 #### Error Display in TUI
-- [ ] Add `errorBackoffMs` field to `LoopState` in `src/state.ts`
+- [x] Add `errorBackoffMs` field to `LoopState` in `src/state.ts`
 - [ ] Add `errorRetryAt` field to `LoopState` (timestamp for countdown)
 - [ ] Update TUI to show retry countdown when backoff active
 - [ ] Format countdown as "Retrying in Xs..." in log component

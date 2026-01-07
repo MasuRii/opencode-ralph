@@ -20,6 +20,8 @@ export type LoopState = {
   sessionId?: string;
   serverUrl?: string;
   attached?: boolean;
+  // Error backoff fields for retry countdown display
+  errorBackoffMs?: number; // Current backoff delay in milliseconds (undefined when no backoff active)
 };
 
 export type ToolEvent = {
