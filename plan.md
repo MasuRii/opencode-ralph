@@ -304,9 +304,9 @@ Allow Ralph to connect to an existing/running OpenCode server via `--server` URL
 
 ### 4.2 Write unit tests for connectToExternalServer
 
-- [ ] **4.2.1** Export `connectToExternalServer` from `src/loop.ts`
-- [ ] **4.2.2** Add import in `tests/unit/loop.test.ts`
-- [ ] **4.2.3** Add the following test suite:
+- [x] **4.2.1** Export `connectToExternalServer` from `src/loop.ts`
+- [x] **4.2.2** Add import in `tests/unit/loop.test.ts`
+- [x] **4.2.3** Add the following test suite:
   ```typescript
   describe("connectToExternalServer", () => {
     it("should return connection info for healthy server", async () => {
@@ -348,7 +348,7 @@ Allow Ralph to connect to an existing/running OpenCode server via `--server` URL
     });
   });
   ```
-- [ ] **4.2.4** Run `bun test tests/unit/loop.test.ts` to verify tests pass
+- [x] **4.2.4** Run `bun test tests/unit/loop.test.ts` to verify tests pass
 
 ---
 

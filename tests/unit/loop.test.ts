@@ -1,5 +1,5 @@
 import { describe, it, expect, mock } from "bun:test";
-import { buildPrompt, parseModel, validateAndNormalizeServerUrl, checkServerHealth } from "../../src/loop.js";
+import { buildPrompt, parseModel, validateAndNormalizeServerUrl, checkServerHealth, connectToExternalServer } from "../../src/loop.js";
 import type { LoopOptions } from "../../src/state.js";
 
 describe("buildPrompt", () => {
@@ -242,6 +242,46 @@ describe("checkServerHealth", () => {
     
     const result = await checkServerHealth("http://localhost:4190", 1000);
     expect(result).toEqual({ ok: false, reason: "unreachable" });
+    
+    globalThis.fetch = originalFetch;
+  });
+});
+
+describe("connectToExternalServer", () => {
+  it("should return connection info for healthy server", async () => {
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = mock(() => 
+      Promise.resolve(new Response(JSON.stringify({ healthy: true }), { status: 200 }))
+    ) as unknown as typeof fetch;
+    
+    const result = await connectToExternalServer("http://localhost:4190");
+    expect(result.url).toBe("http://localhost:4190");
+    expect(result.attached).toBe(true);
+    expect(typeof result.close).toBe("function");
+    
+    globalThis.fetch = originalFetch;
+  });
+
+  it("should throw on invalid URL", async () => {
+    await expect(connectToExternalServer("not-a-url")).rejects.toThrow("Invalid URL format");
+  });
+
+  it("should throw on unreachable server", async () => {
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = mock(() => Promise.reject(new Error("Network error"))) as unknown as typeof fetch;
+    
+    await expect(connectToExternalServer("http://localhost:4190")).rejects.toThrow("Cannot connect");
+    
+    globalThis.fetch = originalFetch;
+  });
+
+  it("should throw on unhealthy server", async () => {
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = mock(() => 
+      Promise.resolve(new Response(JSON.stringify({ healthy: false }), { status: 200 }))
+    ) as unknown as typeof fetch;
+    
+    await expect(connectToExternalServer("http://localhost:4190")).rejects.toThrow("Server unhealthy");
     
     globalThis.fetch = originalFetch;
   });
