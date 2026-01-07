@@ -282,7 +282,7 @@ export function App(props: AppProps) {
   };
 
   // Track if we've notified about keyboard events working (only notify once)
-  let keyboardEventNotified = false;
+  const [keyboardEventNotified, setKeyboardEventNotified] = createSignal(false);
 
   /**
    * Show the command palette dialog.
@@ -310,7 +310,7 @@ export function App(props: AppProps) {
               onQuit={props.onQuit}
               onKeyboardEvent={props.onKeyboardEvent}
               keyboardEventNotified={keyboardEventNotified}
-              setKeyboardEventNotified={(v: boolean) => { keyboardEventNotified = v; }}
+              setKeyboardEventNotified={setKeyboardEventNotified}
               showTasks={showTasks}
               setShowTasks={setShowTasks}
               tasks={tasks}
@@ -339,8 +339,8 @@ type AppContentProps = {
   renderer: ReturnType<typeof useRenderer>;
   onQuit: () => void;
   onKeyboardEvent?: () => void;
-  keyboardEventNotified: boolean;
-  setKeyboardEventNotified: (v: boolean) => void;
+  keyboardEventNotified: Accessor<boolean>;
+  setKeyboardEventNotified: Setter<boolean>;
   showTasks: () => boolean;
   setShowTasks: (v: boolean) => void;
   tasks: () => Task[];
@@ -805,6 +805,10 @@ function AppContent(props: AppContentProps) {
    * Show the command palette dialog with all registered commands.
    */
   const showCommandPalette = () => {
+    if (dialog.hasDialogs()) {
+      return;
+    }
+
     const commands = command.getCommands();
     const options = commands.map((cmd): CommandOption & { onSelect: () => void } => ({
       title: cmd.title,
@@ -829,13 +833,14 @@ function AppContent(props: AppContentProps) {
         borderColor={colors.purple}
       />
     ));
+    props.renderer.requestRender?.();
   };
 
   // Keyboard handling - now inside context providers
   useKeyboard((e: KeyEvent) => {
     // Notify caller that OpenTUI keyboard handling is working
     // Also log the first key event for diagnostic purposes (Phase 1.1)
-    if (!props.keyboardEventNotified && props.onKeyboardEvent) {
+    if (!props.keyboardEventNotified() && props.onKeyboardEvent) {
       props.setKeyboardEventNotified(true);
       props.onKeyboardEvent();
       // Log first key event to diagnose keyboard issues
@@ -851,10 +856,20 @@ function AppContent(props: AppContentProps) {
       });
     }
 
+    const key = e.name.toLowerCase();
+
+    // SAFETY VALVE: Ctrl+C always quits, even if a dialog is open/broken
+    // This ensures users can always exit the app without killing the terminal
+    if (key === "c" && e.ctrl) {
+      log("app", "Quit requested via Ctrl+C (safety valve)");
+      props.renderer.setTerminalTitle("");
+      props.renderer.destroy();
+      props.onQuit();
+      return;
+    }
+
     // Skip if any input is focused (dialogs, steering mode, etc.)
     if (isInputFocused()) return;
-
-    const key = e.name.toLowerCase();
 
     // ESC key: close tasks panel if open
     if (key === "escape" && props.showTasks()) {
@@ -926,14 +941,7 @@ function AppContent(props: AppContentProps) {
       return;
     }
 
-    // Ctrl+C: quit
-    if (key === "c" && e.ctrl) {
-      log("app", "Quit requested via Ctrl+C");
-      props.renderer.setTerminalTitle("");
-      props.renderer.destroy();
-      props.onQuit();
-      return;
-    }
+    // Note: Ctrl+C is handled above as a safety valve (before isInputFocused check)
   });
 
   return (
