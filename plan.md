@@ -421,7 +421,7 @@
 - [x] Copy `monokai.json` theme file
 - [x] Copy `nightowl.json` theme file
 - [x] Copy `nord.json` theme file
-- [ ] Copy `one-dark.json` theme file
+- [x] Copy `one-dark.json` theme file
 - [ ] Copy `opencode.json` theme file
 - [ ] Copy `orng.json` theme file
 - [ ] Copy `osaka-jade.json` theme file
