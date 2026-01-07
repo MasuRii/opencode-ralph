@@ -231,7 +231,7 @@
 - [x] Define `terminalConfig` keybind in keymap
 - [x] Define `toggleTasks` keybind in keymap
 - [x] Define `togglePause` keybind in keymap
-- [ ] Register "Copy attach command" action
+- [x] Register "Copy attach command" action
 - [ ] Register "Choose default terminal" action
 - [ ] Register "Toggle tasks panel" action
 - [x] Register "Pause/Resume" action

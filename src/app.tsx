@@ -9,6 +9,7 @@ import { SteeringOverlay } from "./components/steering";
 import { DialogProvider, DialogStack, useDialog, useInputFocus } from "./context/DialogContext";
 import { CommandProvider, useCommand, type CommandOption } from "./context/CommandContext";
 import { DialogSelect } from "./ui/DialogSelect";
+import { DialogAlert } from "./ui/DialogAlert";
 import { keymap, matchesKeybind } from "./lib/keymap";
 import type { LoopState, LoopOptions, PersistedState } from "./state";
 import { colors } from "./components/colors";
@@ -280,6 +281,44 @@ function AppContent(props: AppContentProps) {
   // Combined check for any input being focused
   const isInputFocused = () => props.commandMode() || dialogInputFocused();
 
+  /**
+   * Get the attach command string for the current session.
+   * Returns null if no session is active.
+   */
+  const getAttachCommand = (): string | null => {
+    const currentState = props.state();
+    if (!currentState.sessionId) return null;
+    
+    const serverUrl = currentState.serverUrl || "http://localhost:10101";
+    return `opencode attach ${serverUrl} --session ${currentState.sessionId}`;
+  };
+
+  /**
+   * Show a dialog with the attach command for manual copying.
+   * Used as fallback when clipboard is not available.
+   */
+  const showAttachCommandDialog = () => {
+    const attachCmd = getAttachCommand();
+    if (!attachCmd) {
+      dialog.show(() => (
+        <DialogAlert
+          title="No Active Session"
+          message="There is no active session to attach to."
+          variant="warning"
+        />
+      ));
+      return;
+    }
+
+    dialog.show(() => (
+      <DialogAlert
+        title="Attach Command"
+        message={attachCmd}
+        variant="info"
+      />
+    ));
+  };
+
   // Register default commands on mount
   onMount(() => {
     // Register "Pause/Resume" command
@@ -293,6 +332,20 @@ function AppContent(props: AppContentProps) {
         keybind: keymap.togglePause.label,
         onSelect: () => {
           props.togglePause();
+        },
+      },
+    ]);
+
+    // Register "Copy attach command" action
+    command.register("copyAttach", () => [
+      {
+        title: "Copy attach command",
+        value: "copyAttach",
+        description: "Show attach command for connecting another terminal",
+        keybind: keymap.copyAttach.label,
+        disabled: !props.state().sessionId,
+        onSelect: () => {
+          showAttachCommandDialog();
         },
       },
     ]);
