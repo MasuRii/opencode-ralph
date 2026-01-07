@@ -16,6 +16,7 @@ import type { LoopState, LoopOptions, PersistedState } from "./state";
 import { detectInstalledTerminals, launchTerminal, getAttachCommand as getAttachCmdFromTerminal, type KnownTerminal } from "./lib/terminal-launcher";
 import { loadConfig, setPreferredTerminal } from "./lib/config";
 import { parsePlanTasks, type Task } from "./plan";
+import { Tasks } from "./components/tasks";
 import { colors } from "./components/colors";
 import { calculateEta } from "./util/time";
 import { log } from "./util/log";
@@ -760,6 +761,13 @@ function AppContent(props: AppContentProps) {
 
     const key = e.name.toLowerCase();
 
+    // ESC key: close tasks panel if open
+    if (key === "escape" && props.showTasks()) {
+      log("app", "Tasks panel closed via ESC");
+      props.setShowTasks(false);
+      return;
+    }
+
     // Ctrl+P: open command palette
     if (matchesKeybind(e, keymap.commandPalette)) {
       log("app", "Command palette opened via Ctrl+P");
@@ -794,6 +802,13 @@ function AppContent(props: AppContentProps) {
     // t key: launch terminal with attach command (only when no modifiers)
     if (matchesKeybind(e, keymap.terminalConfig)) {
       handleTerminalLaunch();
+      return;
+    }
+
+    // Shift+T: toggle tasks panel
+    if (matchesKeybind(e, keymap.toggleTasks)) {
+      log("app", "Tasks panel toggled via Shift+T");
+      props.setShowTasks(!props.showTasks());
       return;
     }
 
@@ -864,6 +879,35 @@ function AppContent(props: AppContentProps) {
           }
         }}
       />
+      {/* Tasks Panel Overlay (right-side panel) */}
+      {props.showTasks() && (
+        <box
+          position="absolute"
+          top={2}
+          right={0}
+          width={40}
+          height="80%"
+          flexDirection="column"
+          borderStyle="single"
+          borderColor={colors.cyan}
+          backgroundColor={colors.bgPanel}
+        >
+          <box
+            width="100%"
+            height={1}
+            paddingLeft={1}
+            backgroundColor={colors.bgPanel}
+          >
+            <text fg={colors.cyan}>Tasks</text>
+            <box flexGrow={1} />
+            <text fg={colors.fgMuted}>ESC to close</text>
+          </box>
+          <Tasks
+            tasks={props.tasks()}
+            onClose={() => props.setShowTasks(false)}
+          />
+        </box>
+      )}
       <DialogStack />
     </box>
   );

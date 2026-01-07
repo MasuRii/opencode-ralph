@@ -382,16 +382,16 @@
 - [x] Clear interval on unmount
 
 #### Tasks Key Handler
-- [ ] Check for key conflict with Terminal Launcher (both use T)
-- [ ] Choose alternative key if conflict (e.g., Shift+T or use command palette)
-- [ ] Add key handler to toggle `showTasks` signal
-- [ ] Update footer to show tasks keybind hint
+- [x] Check for key conflict with Terminal Launcher (both use T)
+- [x] Choose alternative key if conflict (e.g., Shift+T or use command palette)
+- [x] Add key handler to toggle `showTasks` signal
+- [x] Update footer to show tasks keybind hint
 
 #### Tasks Overlay
-- [ ] Render TasksPanel when `showTasks()` is true
-- [ ] Position as right-side overlay
-- [ ] Add border and title "Tasks"
-- [ ] Pass tasks and onClose props
+- [x] Render TasksPanel when `showTasks()` is true
+- [x] Position as right-side overlay
+- [x] Add border and title "Tasks"
+- [x] Pass tasks and onClose props
 
 ---
 

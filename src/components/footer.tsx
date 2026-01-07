@@ -27,7 +27,7 @@ export function Footer(props: FooterProps) {
     >
       {/* Keybind hints (left side) */}
       <text fg={colors.fgDark}>
-        <span style={{ fg: colors.fgMuted }}>q</span> quit  <span style={{ fg: colors.fgMuted }}>p</span> {props.paused ? "resume" : "pause"}{props.sessionActive && (<>  <span style={{ fg: colors.fgMuted }}>:</span> steer</>)}
+        <span style={{ fg: colors.fgMuted }}>q</span> quit  <span style={{ fg: colors.fgMuted }}>p</span> {props.paused ? "resume" : "pause"}  <span style={{ fg: colors.fgMuted }}>T</span> tasks{props.sessionActive && (<>  <span style={{ fg: colors.fgMuted }}>:</span> steer</>)}
       </text>
 
       {/* Spacer */}
