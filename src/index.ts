@@ -548,22 +548,26 @@ async function main() {
       },
       onSessionCreated: (session) => {
         // Store session info in state for steering mode
+        // Reset tokens to zero for new session (fresh token tracking per session)
         stateSetters.setState((prev) => ({
           ...prev,
           sessionId: session.sessionId,
           serverUrl: session.serverUrl,
           attached: session.attached,
+          tokens: undefined, // Reset token counters on session start
         }));
         // Store sendMessage function for steering overlay
         stateSetters.setSendMessage(session.sendMessage);
       },
       onSessionEnded: (_sessionId) => {
         // Clear session fields when session ends
+        // Also clear token display when no active session
         stateSetters.setState((prev) => ({
           ...prev,
           sessionId: undefined,
           serverUrl: undefined,
           attached: undefined,
+          tokens: undefined, // Clear token display when session ends
         }));
         // Clear sendMessage function
         stateSetters.setSendMessage(null);

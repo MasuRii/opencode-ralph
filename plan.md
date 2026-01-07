@@ -497,8 +497,8 @@
 - [x] Only show when tokens > 0
 
 #### Session Reset
-- [ ] Call `reset()` on session start
-- [ ] Clear display when no active session
+- [x] Call `reset()` on session start
+- [x] Clear display when no active session
 
 ### 3.3 Toast Notifications
 
