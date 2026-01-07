@@ -8,6 +8,20 @@ export type PlanProgress = {
 };
 
 /**
+ * Represents a single task from a plan file
+ */
+export type Task = {
+  /** Unique identifier derived from line number */
+  id: string;
+  /** Line number in the file (1-indexed) */
+  line: number;
+  /** Task text without the checkbox prefix */
+  text: string;
+  /** Whether the task is completed */
+  done: boolean;
+};
+
+/**
  * Parse a plan file and count completed/total tasks.
  * Tasks are identified by markdown checkboxes: `- [x]` (done) and `- [ ]` (not done)
  * @param path - Path to the plan file

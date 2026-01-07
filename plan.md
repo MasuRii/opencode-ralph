@@ -351,7 +351,7 @@
 ### 2.5 Tasks Panel
 
 #### Task Parser
-- [ ] Create `Task` type in `src/plan.ts` with `id`, `line`, `text`, `done` fields
+- [x] Create `Task` type in `src/plan.ts` with `id`, `line`, `text`, `done` fields
 - [ ] Create `parsePlanTasks()` function (separate from `parsePlan()`)
 - [ ] Read file content line by line
 - [ ] Match checkbox pattern: `/^(\s*)-\s*\[([ xX])\]\s*(.+)$/`
