@@ -37,8 +37,8 @@ Allow Ralph to connect to an existing/running OpenCode server via `--server` URL
 
 ### 2.1 Create validateAndNormalizeServerUrl function
 
-- [ ] **2.1.1** Open `src/loop.ts`
-- [ ] **2.1.2** Add the following function after the imports (around line 10):
+- [x] **2.1.1** Open `src/loop.ts`
+- [x] **2.1.2** Add the following function after the imports (around line 10):
   ```typescript
   /**
    * Validate and normalize a server URL.
@@ -64,7 +64,7 @@ Allow Ralph to connect to an existing/running OpenCode server via `--server` URL
     return parsed.origin;
   }
   ```
-- [ ] **2.1.3** Run `bun run typecheck` to verify no errors
+- [x] **2.1.3** Run `bun run typecheck` to verify no errors
 
 ### 2.2 Create isLocalhost helper function
 

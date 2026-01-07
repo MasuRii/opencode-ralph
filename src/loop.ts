@@ -10,6 +10,30 @@ const DEFAULT_PORT = 4190;
 const DEFAULT_HOSTNAME = "127.0.0.1";
 
 /**
+ * Validate and normalize a server URL.
+ * @returns normalized origin (no trailing slash)
+ * @throws Error if URL is invalid or not an origin
+ */
+export function validateAndNormalizeServerUrl(url: string): string {
+  let parsed: URL;
+  try {
+    parsed = new URL(url);
+  } catch {
+    throw new Error(`Invalid URL format: ${url}`);
+  }
+  
+  if (!['http:', 'https:'].includes(parsed.protocol)) {
+    throw new Error(`Invalid protocol: ${parsed.protocol}. Must be http or https.`);
+  }
+  if (parsed.pathname !== "/" || parsed.search || parsed.hash) {
+    throw new Error(`Server URL must be origin only (no path/query/fragment): ${url}`);
+  }
+  
+  // URL.origin never has trailing slash per WHATWG spec
+  return parsed.origin;
+}
+
+/**
  * Check if an opencode server is already running at the given URL.
  * Uses the /global/health endpoint.
  */
