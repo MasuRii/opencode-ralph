@@ -243,7 +243,7 @@
 
 #### App Integration
 - [x] Wrap App with `CommandProvider` in `src/app.tsx`
-- [ ] Initialize default commands on mount
+- [x] Initialize default commands on mount
 
 ### 2.2 Terminal Launcher (T key)
 
