@@ -1,27 +1,14 @@
 import { createSignal, type Accessor } from "solid-js";
+import type { ActivityEventType } from "../types/events";
+
+// Re-export ActivityEventType for consumers that import from this module
+export type { ActivityEventType } from "../types/events";
 
 /**
  * Maximum number of activity events to keep in the log.
  * Prevents unbounded memory growth.
  */
 const MAX_ACTIVITY_EVENTS = 100;
-
-/**
- * Event type categories for the activity log.
- * Used for filtering and styling events.
- */
-export type ActivityEventType =
-  | "session_start"
-  | "session_idle"
-  | "task"
-  | "file_edit"
-  | "file_read"
-  | "error"
-  | "user_message"
-  | "assistant_message"
-  | "reasoning"
-  | "tool_use"
-  | "info";
 
 /**
  * An activity event in the log.

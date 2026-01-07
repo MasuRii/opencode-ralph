@@ -621,24 +621,24 @@
 ### 3.6 Enhanced Activity Log
 
 #### Event Type Definitions
-- [ ] Create `src/types/events.ts` file
-- [ ] Define `ActivityEventType` union type
-- [ ] Add "session_start" type
-- [ ] Add "session_idle" type
-- [ ] Add "task" type
-- [ ] Add "file_edit" type
-- [ ] Add "file_read" type
-- [ ] Add "error" type
-- [ ] Add "user_message" type
-- [ ] Add "assistant_message" type
-- [ ] Add "reasoning" type
-- [ ] Add "tool_use" type
+- [x] Create `src/types/events.ts` file
+- [x] Define `ActivityEventType` union type
+- [x] Add "session_start" type
+- [x] Add "session_idle" type
+- [x] Add "task" type
+- [x] Add "file_edit" type
+- [x] Add "file_read" type
+- [x] Add "error" type
+- [x] Add "user_message" type
+- [x] Add "assistant_message" type
+- [x] Add "reasoning" type
+- [x] Add "tool_use" type
 
 #### Event Icons and Colors
-- [ ] Define icon map for each event type
-- [ ] Define color map for each event type
-- [ ] Create `getEventIcon()` helper function
-- [ ] Create `getEventColor()` helper function
+- [x] Define icon map for each event type
+- [x] Define color map for each event type
+- [x] Create `getEventIcon()` helper function
+- [x] Create `getEventColor()` helper function
 
 #### Event Detail Support
 - [ ] Add optional `detail` field to ActivityEvent
