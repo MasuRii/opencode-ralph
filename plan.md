@@ -610,7 +610,7 @@
            - Activity log events are already in LoopState.events (ToolEvent[])
       -->
 - [x] Create hook instances in App component
-- [ ] Wire dispatch actions to UI handlers
+- [x] Wire dispatch actions to UI handlers
 - [ ] Replace direct signal updates with dispatch calls
 
 #### App Cleanup

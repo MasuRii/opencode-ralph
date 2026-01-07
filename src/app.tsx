@@ -604,7 +604,7 @@ function AppContent(props: AppContentProps) {
         agent: props.options.agent,
       });
 
-      // Update state with session info
+      // Update state with session info (both legacy and hook-based stores)
       props.setState((prev) => ({
         ...prev,
         sessionId: session.sessionId,
@@ -612,6 +612,15 @@ function AppContent(props: AppContentProps) {
         attached: session.attached,
         status: "idle", // Ready for input
       }));
+      
+      // Dispatch to loopStore (hook-based approach for gradual migration)
+      props.loopStore.dispatch({
+        type: "SET_SESSION",
+        sessionId: session.sessionId,
+        serverUrl: session.serverUrl,
+        attached: session.attached,
+      });
+      props.loopStore.dispatch({ type: "SET_IDLE", isIdle: true });
 
       // Store sendMessage function for steering mode
       globalSendMessage = session.sendMessage;
@@ -679,12 +688,15 @@ function AppContent(props: AppContentProps) {
             log("app", "Debug mode: sending prompt", { message: value.slice(0, 50) });
             try {
               await globalSendMessage(value);
-              // Update status to show we're running
+              // Update status to show we're running (both legacy and hook-based stores)
               props.setState((prev) => ({
                 ...prev,
                 status: "running",
                 isIdle: false,
               }));
+              // Dispatch to loopStore (hook-based approach)
+              props.loopStore.dispatch({ type: "START" });
+              props.loopStore.dispatch({ type: "SET_IDLE", isIdle: false });
             } catch (error) {
               const errorMsg = error instanceof Error ? error.message : String(error);
               log("app", "Debug mode: failed to send prompt", { error: errorMsg });
