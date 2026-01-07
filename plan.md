@@ -578,13 +578,13 @@
 - [x] Add session-related derived helpers
 
 #### Loop Stats Hook
-- [ ] Create `src/hooks/useLoopStats.ts` file
-- [ ] Create `createLoopStats()` function
-- [ ] Track iteration start times
-- [ ] Track iteration durations
-- [ ] Calculate average iteration time
-- [ ] Handle pause-aware elapsed time
-- [ ] Estimate remaining time (ETA)
+- [x] Create `src/hooks/useLoopStats.ts` file
+- [x] Create `createLoopStats()` function
+- [x] Track iteration start times
+- [x] Track iteration durations
+- [x] Calculate average iteration time
+- [x] Handle pause-aware elapsed time
+- [x] Estimate remaining time (ETA)
 
 #### Activity Log Hook
 - [ ] Create `src/hooks/useActivityLog.ts` file
