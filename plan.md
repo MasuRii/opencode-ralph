@@ -609,9 +609,9 @@ Allow Ralph to connect to an existing/running OpenCode server via `--server` URL
 
 ### 10.1 Run full test suite
 
-- [ ] **10.1.1** Run `bun test` to verify all tests pass
-- [ ] **10.1.2** Run `bun run typecheck` to verify no type errors
-- [ ] **10.1.3** Fix any failing tests or type errors
+- [x] **10.1.1** Run `bun test` to verify all tests pass
+- [x] **10.1.2** Run `bun run typecheck` to verify no type errors
+- [x] **10.1.3** Fix any failing tests or type errors
 
 ### 10.2 Manual testing checklist
 
