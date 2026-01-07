@@ -633,7 +633,7 @@ Allow Ralph to connect to an existing/running OpenCode server via `--server` URL
 
 ### 10.4 Code review checklist
 
-- [ ] **10.4.1** All new functions have JSDoc comments
+- [x] **10.4.1** All new functions have JSDoc comments
 - [ ] **10.4.2** No `console.log` statements left in code
 - [ ] **10.4.3** Error messages are clear and actionable
 - [x] **10.4.4** All exports are intentional (don't export internal helpers)

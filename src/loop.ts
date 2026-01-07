@@ -186,11 +186,19 @@ async function getOrCreateOpencodeServer(options: {
   };
 }
 
+/**
+ * Build the prompt string by replacing {plan} placeholders with the actual plan file path.
+ */
 export function buildPrompt(options: LoopOptions): string {
   const template = options.prompt || DEFAULT_PROMPT;
   return template.replace(/\{plan\}/g, options.planFile);
 }
 
+/**
+ * Parse a model string into provider and model IDs.
+ * @param model - Model string in format "provider/model" (e.g., "anthropic/claude-opus-4")
+ * @throws Error if model string doesn't contain a slash separator
+ */
 export function parseModel(model: string): { providerID: string; modelID: string } {
   const slashIndex = model.indexOf("/");
   if (slashIndex === -1) {
