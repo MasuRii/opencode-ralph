@@ -318,6 +318,10 @@ export async function runLoop(
     let iteration = persistedState.iterationTimes.length;
     let isPaused = false;
     let previousCommitCount = await getCommitsSince(persistedState.initialCommitHash);
+    
+    // Error tracking for exponential backoff (local, not persisted)
+    let errorCount = 0;
+    
     log("loop", "Initial state", { iteration, previousCommitCount });
 
     // Main loop
@@ -347,208 +351,230 @@ export async function runLoop(
         callbacks.onResume();
       }
 
+      // Apply error backoff before iteration starts
+      if (errorCount > 0) {
+        const backoffMs = calculateBackoffMs(errorCount);
+        log("loop", "Error backoff", { errorCount, backoffMs });
+        await Bun.sleep(backoffMs);
+      }
+
       // Iteration start (10.11)
       iteration++;
       const iterationStartTime = Date.now();
       log("loop", "Iteration starting", { iteration });
       callbacks.onIterationStart(iteration);
-      
-      // Add separator event for new iteration
-      callbacks.onEvent({
-        iteration,
-        type: "separator",
-        text: `iteration ${iteration}`,
-        timestamp: iterationStartTime,
-      });
 
-      // Add spinner event (will be kept at end of array and removed when iteration completes)
-      callbacks.onEvent({
-        iteration,
-        type: "spinner",
-        text: "looping...",
-        timestamp: iterationStartTime,
-      });
-
-      // Parse plan and update task counts (10.12)
-      log("loop", "Parsing plan file");
-      const { done, total } = await parsePlan(options.planFile);
-      log("loop", "Plan parsed", { done, total });
-      callbacks.onTasksUpdated(done, total);
-
-      // Parse model and build prompt before session creation
-      const promptText = await buildPrompt(options);
-      const { providerID, modelID } = parseModel(options.model);
-
-      // Create session (10.13)
-      log("loop", "Creating session...");
-      const sessionResult = await client.session.create();
-      if (!sessionResult.data) {
-        log("loop", "ERROR: Failed to create session");
-        callbacks.onError("Failed to create session");
-        break;
-      }
-      const sessionId = sessionResult.data.id;
-      log("loop", "Session created", { sessionId });
-
-      // Track whether current session is active (for steering mode guard)
-      let sessionActive = true;
-
-      // Create sendMessage function for steering mode
-      const sendMessage = async (message: string): Promise<void> => {
-        // Guard: check for active session before sending
-        if (!sessionActive) {
-          log("loop", "Cannot send steering message: no active session");
-          throw new Error("No active session");
-        }
-        log("loop", "Sending steering message", { sessionId, message: message.slice(0, 50) });
-        await client.session.prompt({
-          path: { id: sessionId },
-          body: {
-            parts: [{ type: "text", text: message }],
-            model: { providerID, modelID },
-          },
+      try {
+        // Add separator event for new iteration
+        callbacks.onEvent({
+          iteration,
+          type: "separator",
+          text: `iteration ${iteration}`,
+          timestamp: iterationStartTime,
         });
-      };
 
-      // Call onSessionCreated callback with session info
-      callbacks.onSessionCreated?.({
-        sessionId,
-        serverUrl: server!.url,
-        attached: server!.attached,
-        sendMessage,
-      });
+        // Add spinner event (will be kept at end of array and removed when iteration completes)
+        callbacks.onEvent({
+          iteration,
+          type: "spinner",
+          text: "looping...",
+          timestamp: iterationStartTime,
+        });
 
-      // Subscribe to events - the SSE connection is established when we start iterating
-      log("loop", "Subscribing to events...");
-      const events = await client.event.subscribe();
+        // Parse plan and update task counts (10.12)
+        log("loop", "Parsing plan file");
+        const { done, total } = await parsePlan(options.planFile);
+        log("loop", "Plan parsed", { done, total });
+        callbacks.onTasksUpdated(done, total);
 
-      let promptSent = false;
+        // Parse model and build prompt before session creation
+        const promptText = await buildPrompt(options);
+        const { providerID, modelID } = parseModel(options.model);
 
-      // Set idle state while waiting for LLM response
-      callbacks.onIdleChanged(true);
+        // Create session (10.13)
+        log("loop", "Creating session...");
+        const sessionResult = await client.session.create();
+        if (!sessionResult.data) {
+          log("loop", "ERROR: Failed to create session");
+          throw new Error("Failed to create session");
+        }
+        const sessionId = sessionResult.data.id;
+        log("loop", "Session created", { sessionId });
 
-      let receivedFirstEvent = false;
-      for await (const event of events.stream) {
-        // When SSE connection is established, send the prompt
-        // This ensures we don't miss any events due to race conditions
-        if (event.type === "server.connected" && !promptSent) {
-          promptSent = true;
-          log("loop", "Sending prompt", { providerID, modelID });
+        // Track whether current session is active (for steering mode guard)
+        let sessionActive = true;
 
-          // Fire prompt in background - don't block event loop
-          client.session.prompt({
+        // Create sendMessage function for steering mode
+        const sendMessage = async (message: string): Promise<void> => {
+          // Guard: check for active session before sending
+          if (!sessionActive) {
+            log("loop", "Cannot send steering message: no active session");
+            throw new Error("No active session");
+          }
+          log("loop", "Sending steering message", { sessionId, message: message.slice(0, 50) });
+          await client.session.prompt({
             path: { id: sessionId },
             body: {
-              parts: [{ type: "text", text: promptText }],
+              parts: [{ type: "text", text: message }],
               model: { providerID, modelID },
             },
-          }).catch((e) => {
-            log("loop", "Prompt error", { error: String(e) });
           });
+        };
 
-          continue;
-        }
+        // Call onSessionCreated callback with session info
+        callbacks.onSessionCreated?.({
+          sessionId,
+          serverUrl: server!.url,
+          attached: server!.attached,
+          sendMessage,
+        });
 
-        if (signal.aborted) break;
+        // Subscribe to events - the SSE connection is established when we start iterating
+        log("loop", "Subscribing to events...");
+        const events = await client.event.subscribe();
 
-        // Filter events for current session ID
-        if (event.type === "message.part.updated") {
-          const part = event.properties.part;
-          if (part.sessionID !== sessionId) continue;
+        let promptSent = false;
 
-          // Tool event mapping (10.16)
-          if (part.type === "tool" && part.state.status === "completed") {
-            // Set isIdle to false when first tool event arrives
-            if (!receivedFirstEvent) {
-              receivedFirstEvent = true;
-              callbacks.onIdleChanged(false);
-            }
-            
-            const toolName = part.tool;
-            const title =
-              part.state.title ||
-              (Object.keys(part.state.input).length > 0
-                ? JSON.stringify(part.state.input)
-                : "Unknown");
+        // Set idle state while waiting for LLM response
+        callbacks.onIdleChanged(true);
 
-            log("loop", "Tool completed", { toolName, title });
-            callbacks.onEvent({
-              iteration,
-              type: "tool",
-              icon: toolName,
-              text: title,
-              timestamp: part.state.time.end,
+        let receivedFirstEvent = false;
+        for await (const event of events.stream) {
+          // When SSE connection is established, send the prompt
+          // This ensures we don't miss any events due to race conditions
+          if (event.type === "server.connected" && !promptSent) {
+            promptSent = true;
+            log("loop", "Sending prompt", { providerID, modelID });
+
+            // Fire prompt in background - don't block event loop
+            client.session.prompt({
+              path: { id: sessionId },
+              body: {
+                parts: [{ type: "text", text: promptText }],
+                model: { providerID, modelID },
+              },
+            }).catch((e) => {
+              log("loop", "Prompt error", { error: String(e) });
             });
+
+            continue;
           }
 
-          // Reasoning/thought event - capture LLM text responses
-          if (part.type === "text" && part.text) {
-            // Set isIdle to false when first event arrives
-            if (!receivedFirstEvent) {
-              receivedFirstEvent = true;
-              callbacks.onIdleChanged(false);
-            }
+          if (signal.aborted) break;
 
-            // Truncate long reasoning text for display
-            const content = part.text;
-            const firstLine = content.split("\n")[0];
-            const truncated = firstLine.length > 80 
-              ? firstLine.slice(0, 77) + "..." 
-              : firstLine;
+          // Filter events for current session ID
+          if (event.type === "message.part.updated") {
+            const part = event.properties.part;
+            if (part.sessionID !== sessionId) continue;
 
-            if (truncated.trim()) {
-              log("loop", "Reasoning", { text: truncated });
+            // Tool event mapping (10.16)
+            if (part.type === "tool" && part.state.status === "completed") {
+              // Set isIdle to false when first tool event arrives
+              if (!receivedFirstEvent) {
+                receivedFirstEvent = true;
+                callbacks.onIdleChanged(false);
+              }
+              
+              const toolName = part.tool;
+              const title =
+                part.state.title ||
+                (Object.keys(part.state.input).length > 0
+                  ? JSON.stringify(part.state.input)
+                  : "Unknown");
+
+              log("loop", "Tool completed", { toolName, title });
               callbacks.onEvent({
                 iteration,
-                type: "reasoning",
-                icon: "thought",
-                text: truncated,
-                timestamp: Date.now(),
+                type: "tool",
+                icon: toolName,
+                text: title,
+                timestamp: part.state.time.end,
               });
             }
+
+            // Reasoning/thought event - capture LLM text responses
+            if (part.type === "text" && part.text) {
+              // Set isIdle to false when first event arrives
+              if (!receivedFirstEvent) {
+                receivedFirstEvent = true;
+                callbacks.onIdleChanged(false);
+              }
+
+              // Truncate long reasoning text for display
+              const content = part.text;
+              const firstLine = content.split("\n")[0];
+              const truncated = firstLine.length > 80 
+                ? firstLine.slice(0, 77) + "..." 
+                : firstLine;
+
+              if (truncated.trim()) {
+                log("loop", "Reasoning", { text: truncated });
+                callbacks.onEvent({
+                  iteration,
+                  type: "reasoning",
+                  icon: "thought",
+                  text: truncated,
+                  timestamp: Date.now(),
+                });
+              }
+            }
+          }
+
+          // Session completion detection (10.17)
+          if (event.type === "session.idle" && event.properties.sessionID === sessionId) {
+            log("loop", "Session idle, breaking event loop");
+            sessionActive = false;
+            callbacks.onSessionEnded?.(sessionId);
+            break;
+          }
+
+          // Session error handling (10.18)
+          if (event.type === "session.error") {
+            const props = event.properties;
+            if (props.sessionID !== sessionId || !props.error) continue;
+            
+            // Extract error message from error object
+            let errorMessage = String(props.error.name);
+            if ("data" in props.error && props.error.data && "message" in props.error.data) {
+              errorMessage = String(props.error.data.message);
+            }
+            
+            log("loop", "Session error", { errorMessage });
+            sessionActive = false;
+            callbacks.onSessionEnded?.(sessionId);
+            throw new Error(errorMessage);
           }
         }
 
-        // Session completion detection (10.17)
-        if (event.type === "session.idle" && event.properties.sessionID === sessionId) {
-          log("loop", "Session idle, breaking event loop");
-          sessionActive = false;
-          callbacks.onSessionEnded?.(sessionId);
-          break;
+        // Iteration completion (10.19)
+        const iterationDuration = Date.now() - iterationStartTime;
+        const totalCommits = await getCommitsSince(persistedState.initialCommitHash);
+        const commitsThisIteration = totalCommits - previousCommitCount;
+        previousCommitCount = totalCommits;
+        
+        // Get diff stats
+        const diffStats = await getDiffStats(persistedState.initialCommitHash);
+        
+        log("loop", "Iteration completed", { iteration, duration: iterationDuration, commits: commitsThisIteration, diff: diffStats });
+        callbacks.onIterationComplete(iteration, iterationDuration, commitsThisIteration);
+        callbacks.onCommitsUpdated(totalCommits);
+        callbacks.onDiffUpdated(diffStats.added, diffStats.removed);
+
+        // Reset error count on successful iteration
+        errorCount = 0;
+      } catch (iterationError) {
+        // Handle iteration errors with retry logic
+        if (signal.aborted) {
+          // Don't retry if abort signal is set
+          throw iterationError;
         }
 
-        // Session error handling (10.18)
-        if (event.type === "session.error") {
-          const props = event.properties;
-          if (props.sessionID !== sessionId || !props.error) continue;
-          
-          // Extract error message from error object
-          let errorMessage = String(props.error.name);
-          if ("data" in props.error && props.error.data && "message" in props.error.data) {
-            errorMessage = String(props.error.data.message);
-          }
-          
-          log("loop", "Session error", { errorMessage });
-          sessionActive = false;
-          callbacks.onSessionEnded?.(sessionId);
-          callbacks.onError(errorMessage);
-          throw new Error(errorMessage);
-        }
+        const errorMessage = iterationError instanceof Error ? iterationError.message : String(iterationError);
+        errorCount++;
+        log("loop", "Error in iteration", { error: errorMessage, errorCount });
+        callbacks.onError(errorMessage);
+        // Continue loop to retry with backoff
       }
-
-      // Iteration completion (10.19)
-      const iterationDuration = Date.now() - iterationStartTime;
-      const totalCommits = await getCommitsSince(persistedState.initialCommitHash);
-      const commitsThisIteration = totalCommits - previousCommitCount;
-      previousCommitCount = totalCommits;
-      
-      // Get diff stats
-      const diffStats = await getDiffStats(persistedState.initialCommitHash);
-      
-      log("loop", "Iteration completed", { iteration, duration: iterationDuration, commits: commitsThisIteration, diff: diffStats });
-      callbacks.onIterationComplete(iteration, iterationDuration, commitsThisIteration);
-      callbacks.onCommitsUpdated(totalCommits);
-      callbacks.onDiffUpdated(diffStats.added, diffStats.removed);
     }
     
     log("loop", "Main loop exited", { aborted: signal.aborted });

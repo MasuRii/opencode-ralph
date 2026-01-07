@@ -90,21 +90,21 @@
 - [x] Add 10% jitter to prevent synchronized retries
 
 #### Error Tracking
-- [ ] Add `errorCount` variable in `runLoop` (local, not persisted)
-- [ ] Increment `errorCount` on each caught error
-- [ ] Reset `errorCount` to 0 on successful iteration
+- [x] Add `errorCount` variable in `runLoop` (local, not persisted)
+- [x] Increment `errorCount` on each caught error
+- [x] Reset `errorCount` to 0 on successful iteration
 
 #### Error Handling Refactor
-- [ ] Wrap iteration body in try/catch in `runLoop`
-- [ ] Call `callbacks.onError` when error caught
-- [ ] Log error with `log("loop", "Error in iteration", { error })`
-- [ ] Continue loop instead of rethrowing (unless abort signal set)
+- [x] Wrap iteration body in try/catch in `runLoop`
+- [x] Call `callbacks.onError` when error caught
+- [x] Log error with `log("loop", "Error in iteration", { error })`
+- [x] Continue loop instead of rethrowing (unless abort signal set)
 
 #### Backoff Application
-- [ ] Check `errorCount > 0` before iteration starts
-- [ ] Calculate backoff with `calculateBackoffMs(errorCount)`
-- [ ] Log backoff delay with `log("loop", "Error backoff", { errorCount, backoffMs })`
-- [ ] Apply delay with `await Bun.sleep(backoffMs)`
+- [x] Check `errorCount > 0` before iteration starts
+- [x] Calculate backoff with `calculateBackoffMs(errorCount)`
+- [x] Log backoff delay with `log("loop", "Error backoff", { errorCount, backoffMs })`
+- [x] Apply delay with `await Bun.sleep(backoffMs)`
 
 #### Error Display in TUI
 - [ ] Add `errorBackoffMs` field to `LoopState` in `src/state.ts`
