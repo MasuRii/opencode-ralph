@@ -649,13 +649,13 @@
 - [x] Add `verbose` flag to ActivityEvent
 - [x] Mark reasoning events as verbose
 - [x] Mark file_read events as verbose
-- [ ] Apply dimmed text style to verbose events
+- [x] Apply dimmed text style to verbose events
 
 #### Log Component Updates
 - [x] Update log component to render icons
 - [x] Apply event-specific colors
-- [ ] Render detail text when present
-- [ ] Apply dimmed styling for verbose events
+- [x] Render detail text when present
+- [x] Apply dimmed styling for verbose events
 - [x] Ensure auto-scroll to latest event
 
 ---

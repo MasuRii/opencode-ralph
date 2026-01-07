@@ -169,19 +169,26 @@ function SeparatorEvent(props: { event: ToolEvent; theme: Theme }) {
 
 /**
  * Renders a tool event line.
- * Format: {icon} {text}
+ * Format: {icon} {text} [detail]
  * Icon color is based on tool type (blue for read, green for write/edit, etc.)
+ * Verbose events (e.g., file reads) are dimmed with textMuted color.
  * 
  * Memoized to prevent re-computation of icon and color on every reactive update.
  */
 function ToolEventItem(props: { event: ToolEvent; theme: Theme }) {
   const icon = createMemo(() => props.event.icon || DEFAULT_ICON);
   const iconColor = createMemo(() => getToolColor(props.event.icon, props.theme));
+  const isVerbose = createMemo(() => props.event.verbose === true);
+  // Use dimmed colors for verbose events
+  const textColor = createMemo(() => isVerbose() ? props.theme.textMuted : props.theme.text);
 
   return (
     <box width="100%" flexDirection="row">
-      <text fg={iconColor()}>{icon()}</text>
-      <text fg={props.theme.text}> {props.event.text}</text>
+      <text fg={isVerbose() ? props.theme.textMuted : iconColor()}>{icon()}</text>
+      <text fg={textColor()}> {props.event.text}</text>
+      <Show when={props.event.detail}>
+        <text fg={props.theme.textMuted}> {props.event.detail}</text>
+      </Show>
     </box>
   );
 }
@@ -189,14 +196,15 @@ function ToolEventItem(props: { event: ToolEvent; theme: Theme }) {
 /**
  * Renders a reasoning/thought event line.
  * Format: {icon} {text}
- * Uses warning color (orange-like) to distinguish from tool events.
+ * Uses warning color for icon and dimmed text (textMuted) since reasoning
+ * events are always verbose.
  */
 function ReasoningEventItem(props: { event: ToolEvent; theme: Theme }) {
   const icon = TOOL_ICONS.thought;
 
   return (
     <box width="100%" flexDirection="row">
-      <text fg={props.theme.warning}>{icon}</text>
+      <text fg={props.theme.textMuted}>{icon}</text>
       <text fg={props.theme.textMuted}> {props.event.text}</text>
     </box>
   );
