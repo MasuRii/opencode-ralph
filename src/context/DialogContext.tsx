@@ -3,6 +3,7 @@ import {
   useContext,
   createSignal,
   For,
+  Show,
   JSX,
 } from "solid-js";
 import type { Accessor } from "solid-js";
@@ -172,25 +173,29 @@ export function useInputFocus(): InputFocusValue {
  * DialogStack component that renders all dialogs in the stack.
  * Each dialog is rendered with proper z-indexing (later dialogs on top).
  * Only renders when there are dialogs to show.
+ * 
+ * IMPORTANT: Uses <Show> for reactive conditional rendering.
+ * An early `if (!hasDialogs()) return null;` would NOT be reactive
+ * in Solid.js - the component body only runs once, so the dialog
+ * would never appear when added later.
  */
 export function DialogStack() {
   const { stack, hasDialogs } = useDialog();
 
-  // Don't render anything if no dialogs
-  if (!hasDialogs()) return null;
-
   return (
-    <For each={stack()}>
-      {(Dialog, index) => (
-        <box
-          position="absolute"
-          width="100%"
-          height="100%"
-          zIndex={index() + 100}
-        >
-          <Dialog />
-        </box>
-      )}
-    </For>
+    <Show when={hasDialogs()}>
+      <For each={stack()}>
+        {(Dialog, index) => (
+          <box
+            position="absolute"
+            width="100%"
+            height="100%"
+            zIndex={index() + 100}
+          >
+            <Dialog />
+          </box>
+        )}
+      </For>
+    </Show>
   );
 }
