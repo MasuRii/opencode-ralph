@@ -551,18 +551,18 @@ Allow Ralph to connect to an existing/running OpenCode server via `--server` URL
 
 ### 9.1 Update README.md usage table
 
-- [ ] **9.1.1** Open `README.md`
-- [ ] **9.1.2** Locate the usage table (around line 57)
-- [ ] **9.1.3** Add rows for new options:
+- [x] **9.1.1** Open `README.md`
+- [x] **9.1.2** Locate the usage table (around line 57)
+- [x] **9.1.3** Add rows for new options:
   ```markdown
   | `--server, -s` | (none) | OpenCode server URL to connect to |
   | `--server-timeout` | `5000` | Health check timeout in ms |
   ```
-- [ ] **9.1.4** Verify table formatting is correct
+- [x] **9.1.4** Verify table formatting is correct
 
 ### 9.2 Add example usage section
 
-- [ ] **9.2.1** Add the following after the usage table:
+- [x] **9.2.1** Add the following after the usage table:
   ```markdown
   ### Connecting to an Existing Server
 
@@ -584,8 +584,8 @@ Allow Ralph to connect to an existing/running OpenCode server via `--server` URL
 
 ### 9.3 Document config file options
 
-- [ ] **9.3.1** Locate the existing config documentation or create a new section after "Files"
-- [ ] **9.3.2** Add:
+- [x] **9.3.1** Locate the existing config documentation or create a new section after "Files"
+- [x] **9.3.2** Add:
   ```markdown
   ## Configuration
 
