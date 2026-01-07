@@ -687,7 +687,7 @@
 - [x] Verify debug mode creates manual sessions
 - [x] Verify tasks panel shows all tasks
 - [x] Verify themes apply correctly
-- [ ] Verify tokens accumulate properly
+- [x] Verify tokens accumulate properly
 - [ ] Verify toasts appear and dismiss
 - [ ] Verify clipboard copies on Linux/macOS
 - [ ] Verify all keybindings work without conflicts
