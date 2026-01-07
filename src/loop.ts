@@ -620,6 +620,9 @@ export async function runLoop(
                 detail = JSON.stringify(input);
               }
 
+              // Mark file read tools as verbose (dimmed display)
+              const isFileRead = toolName === "read";
+
               log("loop", "Tool completed", { toolName, title, detail });
               callbacks.onEvent({
                 iteration,
@@ -628,6 +631,7 @@ export async function runLoop(
                 text: title,
                 timestamp: part.state.time.end,
                 detail,
+                verbose: isFileRead,
               });
             }
 
