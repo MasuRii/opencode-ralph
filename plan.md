@@ -427,7 +427,7 @@
 - [x] Copy `osaka-jade.json` theme file
 - [x] Copy `palenight.json` theme file
 - [x] Copy `rosepine.json` theme file
-- [ ] Copy `solarized.json` theme file
+- [x] Copy `solarized.json` theme file
 - [ ] Copy `synthwave84.json` theme file
 - [ ] Copy `tokyonight.json` theme file
 - [ ] Copy `vercel.json` theme file
