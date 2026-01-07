@@ -915,4 +915,204 @@ describe("ralph flow integration", () => {
 
     globalThis.fetch = originalFetch;
   });
+
+  describe("prompt-file precedence and placeholder replacement", () => {
+    it("should use --prompt option over --prompt-file", async () => {
+      // Create a prompt file that should NOT be used
+      const promptFile = "tests/fixtures/test-prompt-file.md";
+      await Bun.write(promptFile, "This prompt from file should NOT be used: {plan}");
+      cleanupFiles.push(promptFile);
+
+      const options: LoopOptions = {
+        planFile: testPlanFile,
+        model: "anthropic/claude-sonnet-4",
+        prompt: "Explicit prompt takes precedence: {plan}", // This should be used
+        promptFile: promptFile,
+      };
+
+      const persistedState: PersistedState = {
+        startTime: Date.now(),
+        initialCommitHash: "abc123",
+        iterationTimes: [],
+        planFile: testPlanFile,
+      };
+
+      const callbacks = createTestCallbacks();
+      const controller = new AbortController();
+
+      // Schedule .ralph-done creation after iteration starts to allow prompt to be sent
+      cleanupFiles.push(".ralph-done");
+      setTimeout(async () => {
+        await Bun.write(".ralph-done", "");
+      }, 50);
+
+      await runLoop(options, persistedState, callbacks, controller.signal);
+
+      // Verify the explicit --prompt was used, not the prompt file
+      expect(mockSessionPrompt).toHaveBeenCalledWith(expect.objectContaining({
+        body: expect.objectContaining({
+          parts: [{ type: "text", text: `Explicit prompt takes precedence: ${testPlanFile}` }],
+        }),
+      }));
+    });
+
+    it("should read from --prompt-file when --prompt is not provided", async () => {
+      // Create a custom prompt file
+      const promptFile = "tests/fixtures/custom-prompt-file.md";
+      await Bun.write(promptFile, "Custom prompt from file: process {plan} now!");
+      cleanupFiles.push(promptFile);
+
+      // Use type assertion since buildPrompt handles undefined prompt internally
+      const options = {
+        planFile: testPlanFile,
+        model: "anthropic/claude-sonnet-4",
+        prompt: undefined,
+        promptFile: promptFile,
+      } as unknown as LoopOptions;
+
+      const persistedState: PersistedState = {
+        startTime: Date.now(),
+        initialCommitHash: "abc123",
+        iterationTimes: [],
+        planFile: testPlanFile,
+      };
+
+      const callbacks = createTestCallbacks();
+      const controller = new AbortController();
+
+      // Schedule .ralph-done creation after iteration starts to allow prompt to be sent
+      cleanupFiles.push(".ralph-done");
+      setTimeout(async () => {
+        await Bun.write(".ralph-done", "");
+      }, 50);
+
+      await runLoop(options, persistedState, callbacks, controller.signal);
+
+      // Verify the prompt file content was used with placeholder replaced
+      expect(mockSessionPrompt).toHaveBeenCalledWith(expect.objectContaining({
+        body: expect.objectContaining({
+          parts: [{ type: "text", text: `Custom prompt from file: process ${testPlanFile} now!` }],
+        }),
+      }));
+    });
+
+    it("should replace both {plan} and {{PLAN_FILE}} placeholders in prompt file", async () => {
+      // Create a prompt file with both placeholder formats
+      const promptFile = "tests/fixtures/dual-placeholder-prompt.md";
+      await Bun.write(promptFile, "Read {plan} first, then update {{PLAN_FILE}} when done.");
+      cleanupFiles.push(promptFile);
+
+      // Use type assertion since buildPrompt handles undefined prompt internally
+      const options = {
+        planFile: testPlanFile,
+        model: "anthropic/claude-sonnet-4",
+        prompt: undefined,
+        promptFile: promptFile,
+      } as unknown as LoopOptions;
+
+      const persistedState: PersistedState = {
+        startTime: Date.now(),
+        initialCommitHash: "abc123",
+        iterationTimes: [],
+        planFile: testPlanFile,
+      };
+
+      const callbacks = createTestCallbacks();
+      const controller = new AbortController();
+
+      // Schedule .ralph-done creation after iteration starts to allow prompt to be sent
+      cleanupFiles.push(".ralph-done");
+      setTimeout(async () => {
+        await Bun.write(".ralph-done", "");
+      }, 50);
+
+      await runLoop(options, persistedState, callbacks, controller.signal);
+
+      // Verify both placeholders were replaced
+      expect(mockSessionPrompt).toHaveBeenCalledWith(expect.objectContaining({
+        body: expect.objectContaining({
+          parts: [{ type: "text", text: `Read ${testPlanFile} first, then update ${testPlanFile} when done.` }],
+        }),
+      }));
+    });
+
+    it("should fall back to DEFAULT_PROMPT when prompt-file doesn't exist", async () => {
+      // Use type assertion since buildPrompt handles undefined prompt internally
+      const options = {
+        planFile: testPlanFile,
+        model: "anthropic/claude-sonnet-4",
+        prompt: undefined,
+        promptFile: "nonexistent-prompt-file.md", // File doesn't exist
+      } as unknown as LoopOptions;
+
+      const persistedState: PersistedState = {
+        startTime: Date.now(),
+        initialCommitHash: "abc123",
+        iterationTimes: [],
+        planFile: testPlanFile,
+      };
+
+      const callbacks = createTestCallbacks();
+      const controller = new AbortController();
+
+      // Schedule .ralph-done creation after iteration starts to allow prompt to be sent
+      cleanupFiles.push(".ralph-done");
+      setTimeout(async () => {
+        await Bun.write(".ralph-done", "");
+      }, 50);
+
+      await runLoop(options, persistedState, callbacks, controller.signal);
+
+      // Verify DEFAULT_PROMPT was used (it contains specific strings)
+      expect(mockSessionPrompt).toHaveBeenCalled();
+      // Get the actual call to verify DEFAULT_PROMPT content
+      const calls = mockSessionPrompt.mock.calls as unknown as Array<[{ body: { parts: Array<{ text: string }> } }]>;
+      expect(calls.length).toBeGreaterThan(0);
+      const promptText = calls[0][0].body.parts[0].text;
+      
+      // DEFAULT_PROMPT contains these strings
+      expect(promptText).toContain("READ all of");
+      expect(promptText).toContain("Pick ONE task");
+      expect(promptText).toContain(".ralph-done");
+      expect(promptText).toContain("NEVER GIT PUSH");
+      // Verify {plan} was replaced
+      expect(promptText).not.toContain("{plan}");
+      expect(promptText).toContain(testPlanFile);
+    });
+
+    it("should use DEFAULT_PROMPT when prompt is empty string", async () => {
+      const options: LoopOptions = {
+        planFile: testPlanFile,
+        model: "anthropic/claude-sonnet-4",
+        prompt: "", // Empty string should fall back to default
+      };
+
+      const persistedState: PersistedState = {
+        startTime: Date.now(),
+        initialCommitHash: "abc123",
+        iterationTimes: [],
+        planFile: testPlanFile,
+      };
+
+      const callbacks = createTestCallbacks();
+      const controller = new AbortController();
+
+      // Schedule .ralph-done creation after iteration starts to allow prompt to be sent
+      cleanupFiles.push(".ralph-done");
+      setTimeout(async () => {
+        await Bun.write(".ralph-done", "");
+      }, 50);
+
+      await runLoop(options, persistedState, callbacks, controller.signal);
+
+      // Verify DEFAULT_PROMPT was used
+      expect(mockSessionPrompt).toHaveBeenCalled();
+      const calls = mockSessionPrompt.mock.calls as unknown as Array<[{ body: { parts: Array<{ text: string }> } }]>;
+      expect(calls.length).toBeGreaterThan(0);
+      const promptText = calls[0][0].body.parts[0].text;
+      
+      expect(promptText).toContain("READ all of");
+      expect(promptText).toContain("Pick ONE task");
+    });
+  });
 });

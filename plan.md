@@ -673,7 +673,7 @@
 ### Integration Tests
 - [x] Test loop with external server attachment
 - [x] Test session creation and steering message sending
-- [ ] Test prompt-file precedence and placeholder replacement
+- [x] Test prompt-file precedence and placeholder replacement
 - [ ] Test plan parsing with various checkbox formats
 - [ ] Test terminal detection on different systems
 
