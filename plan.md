@@ -71,8 +71,8 @@
 - [x] Return DEFAULT_PROMPT as fallback
 
 #### Example Template
-- [ ] Create `.ralph-prompt.md.example` template file
-- [ ] Add example content with `{{PLAN_FILE}}` placeholder
+- [x] Create `.ralph-prompt.md.example` template file
+- [x] Add example content with `{{PLAN_FILE}}` placeholder
 
 #### Tests
 - [ ] Add test for `--prompt` string taking precedence
