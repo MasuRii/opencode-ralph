@@ -375,11 +375,11 @@
 - [x] Initialize tasks by parsing plan file on mount
 
 #### Task Refresh
-- [ ] Create `refreshTasks()` function
-- [ ] Call `parsePlanTasks()` with plan file path
-- [ ] Update `tasks` signal with result
-- [ ] Add polling interval (every 2 seconds)
-- [ ] Clear interval on unmount
+- [x] Create `refreshTasks()` function
+- [x] Call `parsePlanTasks()` with plan file path
+- [x] Update `tasks` signal with result
+- [x] Add polling interval (every 2 seconds)
+- [x] Clear interval on unmount
 
 #### Tasks Key Handler
 - [ ] Check for key conflict with Terminal Launcher (both use T)

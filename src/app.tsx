@@ -170,9 +170,23 @@ export function App(props: AppProps) {
     }
   };
 
-  // Initialize tasks on mount
+  // Initialize tasks on mount and set up polling interval
+  let tasksRefreshInterval: ReturnType<typeof setInterval> | null = null;
+  
   onMount(() => {
     refreshTasks();
+    // Poll for task updates every 2 seconds
+    tasksRefreshInterval = setInterval(() => {
+      refreshTasks();
+    }, 2000);
+  });
+
+  // Clean up tasks refresh interval on unmount
+  onCleanup(() => {
+    if (tasksRefreshInterval) {
+      clearInterval(tasksRefreshInterval);
+      tasksRefreshInterval = null;
+    }
   });
 
   // Signal to track iteration times (for ETA calculation)
