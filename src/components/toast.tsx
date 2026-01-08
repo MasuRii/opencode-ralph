@@ -1,4 +1,4 @@
-import { For } from "solid-js";
+import { For, Show } from "solid-js";
 import { useTheme } from "../context/ThemeContext";
 import { useToast, type Toast, type ToastVariant } from "../context/ToastContext";
 
@@ -42,17 +42,20 @@ function getVariantIcon(variant: ToastVariant): string {
  * Single toast item component.
  * Displays the icon, message, and applies variant-specific styling.
  * When fading, uses muted colors to simulate fade-out animation.
+ * 
+ * NOTE: Uses reactive theme getter `t()` for proper theme updates.
  */
 function ToastItem(props: { toast: Toast }) {
   const { theme } = useTheme();
-  const t = theme();
+  // Reactive getter ensures theme updates propagate correctly
+  const t = () => theme();
   const isFading = () => props.toast.fading ?? false;
   
   // Use muted color when fading out
-  const variantColor = isFading() 
-    ? t.textMuted 
-    : getVariantColor(props.toast.variant, t);
-  const textColor = isFading() ? t.textMuted : t.text;
+  const variantColor = () => isFading() 
+    ? t().textMuted 
+    : getVariantColor(props.toast.variant, t());
+  const textColor = () => isFading() ? t().textMuted : t().text;
   const icon = getVariantIcon(props.toast.variant);
 
   return (
@@ -63,10 +66,10 @@ function ToastItem(props: { toast: Toast }) {
       alignItems="center"
       paddingLeft={1}
       paddingRight={1}
-      backgroundColor={t.backgroundPanel}
+      backgroundColor={t().backgroundPanel}
     >
-      <text fg={variantColor}>{icon}</text>
-      <text fg={textColor}> {props.toast.message}</text>
+      <text fg={variantColor()}>{icon}</text>
+      <text fg={textColor()}> {props.toast.message}</text>
     </box>
   );
 }
@@ -75,30 +78,30 @@ function ToastItem(props: { toast: Toast }) {
  * ToastStack component that renders all active toasts.
  * Positioned at the bottom of the screen above the footer.
  * Renders toasts in order with newest at the bottom.
+ * 
+ * NOTE: Uses reactive theme getter `t()` and <Show> for proper reactivity.
  */
 export function ToastStack() {
   const { toasts } = useToast();
   const { theme } = useTheme();
-  const t = theme();
+  // Reactive getter ensures theme updates propagate correctly
+  const t = () => theme();
 
-  // Only render when there are toasts to show
-  const currentToasts = toasts();
-  if (currentToasts.length === 0) {
-    return null;
-  }
-
+  // Use <Show> for reactive conditional rendering - early return is not reactive in SolidJS
   return (
-    <box
-      position="absolute"
-      bottom={1}
-      left={0}
-      width="100%"
-      flexDirection="column"
-      backgroundColor={t.backgroundPanel}
-    >
-      <For each={currentToasts}>
-        {(toast) => <ToastItem toast={toast} />}
-      </For>
-    </box>
+    <Show when={toasts().length > 0}>
+      <box
+        position="absolute"
+        bottom={1}
+        left={0}
+        width="100%"
+        flexDirection="column"
+        backgroundColor={t().backgroundPanel}
+      >
+        <For each={toasts()}>
+          {(toast) => <ToastItem toast={toast} />}
+        </For>
+      </box>
+    </Show>
   );
 }

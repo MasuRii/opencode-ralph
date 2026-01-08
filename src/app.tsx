@@ -9,7 +9,7 @@ import { SteeringOverlay } from "./components/steering";
 import { DialogProvider, DialogStack, useDialog, useInputFocus } from "./context/DialogContext";
 import { CommandProvider, useCommand, type CommandOption } from "./context/CommandContext";
 import { ToastProvider, useToast } from "./context/ToastContext";
-import { ThemeProvider } from "./context/ThemeContext";
+import { ThemeProvider, useTheme } from "./context/ThemeContext";
 import { ToastStack } from "./components/toast";
 import { DialogSelect, type SelectOption } from "./ui/DialogSelect";
 import { DialogAlert } from "./ui/DialogAlert";
@@ -21,7 +21,7 @@ import { copyToClipboard, detectClipboardTool } from "./lib/clipboard";
 import { loadConfig, setPreferredTerminal } from "./lib/config";
 import { parsePlanTasks, type Task } from "./plan";
 import { Tasks } from "./components/tasks";
-import { legacyColors as colors } from "./lib/theme-colors";
+
 
 import { log } from "./util/log";
 import { createDebugSession } from "./loop";
@@ -237,7 +237,9 @@ export function App(props: AppProps) {
   // Uses loopStats hook for pause-aware elapsed time tracking
   const elapsedInterval = setInterval(() => {
     const currentState = state();
-    if (!currentState.isIdle && currentState.status !== "paused") {
+    const status = currentState.status;
+    // Only tick when actively running (not paused, ready, or idle)
+    if (!currentState.isIdle && status !== "paused" && status !== "ready") {
       // Tick loopStats for pause-aware elapsed time (hook-based approach)
       loopStats.tick();
       // Update remaining tasks for ETA calculation
@@ -358,7 +360,11 @@ function AppContent(props: AppContentProps) {
   const dialog = useDialog();
   const command = useCommand();
   const toast = useToast();
+  const theme = useTheme();
   const { isInputFocused: dialogInputFocused } = useInputFocus();
+
+  // Get theme colors reactively - call theme.theme() to access the resolved theme
+  const t = () => theme.theme();
 
   // Combined check for any input being focused
   const isInputFocused = () => props.commandMode() || dialogInputFocused();
@@ -445,20 +451,27 @@ function AppContent(props: AppContentProps) {
 
   // Register default commands on mount
   onMount(() => {
-    // Register "Pause/Resume" command
-    command.register("togglePause", () => [
-      {
-        title: props.state().status === "paused" ? "Resume" : "Pause",
-        value: "togglePause",
-        description: props.state().status === "paused" 
+    // Register "Start/Pause/Resume" command
+    command.register("togglePause", () => {
+      const status = props.state().status;
+      const title = status === "ready" ? "Start" : status === "paused" ? "Resume" : "Pause";
+      const description = status === "ready" 
+        ? "Start the automation loop"
+        : status === "paused" 
           ? "Resume the automation loop" 
-          : "Pause the automation loop",
-        keybind: keymap.togglePause.label,
-        onSelect: () => {
-          props.togglePause();
+          : "Pause the automation loop";
+      return [
+        {
+          title,
+          value: "togglePause",
+          description,
+          keybind: keymap.togglePause.label,
+          onSelect: () => {
+            props.togglePause();
+          },
         },
-      },
-    ]);
+      ];
+    });
 
     // Register "Copy attach command" action
     command.register("copyAttach", () => [
@@ -497,6 +510,19 @@ function AppContent(props: AppContentProps) {
         onSelect: () => {
           log("app", "Tasks panel toggled via command palette");
           props.setShowTasks(!props.showTasks());
+        },
+      },
+    ]);
+
+    // Register "Switch theme" command
+    command.register("switchTheme", () => [
+      {
+        title: "Switch theme",
+        value: "switchTheme",
+        description: `Change UI color theme (current: ${theme.themeName()})`,
+        onSelect: () => {
+          // Defer to next tick so command palette's pop() completes first
+          queueMicrotask(() => showThemeDialog());
         },
       },
     ]);
@@ -549,9 +575,42 @@ function AppContent(props: AppContentProps) {
           }
         }}
         onCancel={() => {}}
-        borderColor={colors.cyan}
+        borderColor={t().secondary}
       />
     ));
+  };
+
+  /**
+   * Show theme selection dialog.
+   * Lists all available themes and allows user to switch.
+   */
+  const showThemeDialog = () => {
+    const options: SelectOption[] = theme.themeNames.map((name) => ({
+      title: name,
+      value: name,
+      description: name === theme.themeName() ? "(current)" : undefined,
+    }));
+
+    dialog.show(() => (
+      <DialogSelect
+        title="Switch Theme"
+        placeholder="Type to search themes..."
+        options={options}
+        onSelect={(opt) => {
+          theme.setThemeName(opt.value);
+          log("app", "Theme changed", { theme: opt.value });
+          toast.show({
+            variant: "success",
+            message: `Theme changed to ${opt.value}`,
+          });
+          // Force re-render after state updates propagate
+          queueMicrotask(() => props.renderer.requestRender?.());
+        }}
+        onCancel={() => {}}
+        borderColor={t().accent}
+      />
+    ));
+    props.renderer.requestRender?.();
   };
 
   /**
@@ -603,7 +662,7 @@ function AppContent(props: AppContentProps) {
         sessionId: session.sessionId,
         serverUrl: session.serverUrl,
         attached: session.attached,
-        status: "idle", // Ready for input
+        status: "ready", // Ready for input
       }));
 
       // Store sendMessage function for steering mode
@@ -706,7 +765,7 @@ function AppContent(props: AppContentProps) {
         onCancel={() => {
           log("app", "Debug mode: prompt dialog cancelled");
         }}
-        borderColor={colors.purple}
+        borderColor={t().accent}
       />
     ));
   };
@@ -830,7 +889,7 @@ function AppContent(props: AppContentProps) {
           cmd?.onSelect();
         }}
         onCancel={() => {}}
-        borderColor={colors.purple}
+        borderColor={t().accent}
       />
     ));
     props.renderer.requestRender?.();
@@ -949,7 +1008,7 @@ function AppContent(props: AppContentProps) {
       flexDirection="column"
       width="100%"
       height="100%"
-      backgroundColor={colors.bgDark}
+      backgroundColor={t().background}
     >
       <Header
         status={props.state().status}
@@ -963,7 +1022,7 @@ function AppContent(props: AppContentProps) {
       <Footer
         commits={props.state().commits}
         elapsed={props.loopStats.elapsedMs()}
-        paused={props.state().status === "paused"}
+        status={props.state().status}
         linesAdded={props.state().linesAdded}
         linesRemoved={props.state().linesRemoved}
         sessionActive={!!props.state().sessionId}
@@ -995,18 +1054,18 @@ function AppContent(props: AppContentProps) {
           height="80%"
           flexDirection="column"
           borderStyle="single"
-          borderColor={colors.cyan}
-          backgroundColor={colors.bgPanel}
+          borderColor={t().secondary}
+          backgroundColor={t().backgroundPanel}
         >
           <box
             width="100%"
             height={1}
             paddingLeft={1}
-            backgroundColor={colors.bgPanel}
+            backgroundColor={t().backgroundPanel}
           >
-            <text fg={colors.cyan}>Tasks</text>
+            <text fg={t().secondary}>Tasks</text>
             <box flexGrow={1} />
-            <text fg={colors.fgMuted}>ESC to close</text>
+            <text fg={t().textMuted}>ESC to close</text>
           </box>
           <Tasks
             tasks={props.tasks()}

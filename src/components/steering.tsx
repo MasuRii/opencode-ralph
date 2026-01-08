@@ -16,11 +16,14 @@ export type SteeringOverlayProps = {
  * 
  * IMPORTANT: Uses useInputFocus() to claim input focus when visible,
  * preventing App-level handlers from processing keys while steering is active.
+ * 
+ * NOTE: Uses reactive theme getter `t()` for proper theme updates.
  */
 export function SteeringOverlay(props: SteeringOverlayProps) {
   const [input, setInput] = createSignal("");
   const { theme } = useTheme();
-  const t = theme();
+  // Reactive getter ensures theme updates propagate correctly
+  const t = () => theme();
   const { setInputFocused } = useInputFocus();
 
   // Claim/release input focus when visibility changes
@@ -93,36 +96,39 @@ export function SteeringOverlay(props: SteeringOverlayProps) {
       height="100%"
       justifyContent="center"
       alignItems="center"
-      backgroundColor={t.backgroundElement}
+      backgroundColor={t().backgroundElement}
     >
       <box
         width="60%"
         padding={1}
         borderStyle="single"
-        borderColor={t.accent}
-        backgroundColor={t.backgroundPanel}
+        borderColor={t().accent}
+        backgroundColor={t().backgroundPanel}
         flexDirection="column"
       >
         {/* Title */}
-        <text fg={t.accent}>Steer Agent</text>
+        <text fg={t().accent}>Steer Agent</text>
 
         {/* Input box */}
         <box
           marginTop={1}
           padding={1}
           borderStyle="single"
-          borderColor={t.border}
-          backgroundColor={t.background}
+          borderColor={t().border}
+          backgroundColor={t().background}
         >
-          <text fg={input() ? t.text : t.textMuted}>
+          <text fg={input() ? t().text : t().textMuted}>
             {input() || "Type message and press Enter"}
           </text>
         </box>
 
-        {/* Help text */}
-        <text fg={t.borderSubtle} marginTop={1}>
-          <span style={{ fg: t.textMuted }}>Enter</span> send  <span style={{ fg: t.textMuted }}>Esc</span> cancel
-        </text>
+        {/* Help text - using separate <text> elements for colors */}
+        <box flexDirection="row" marginTop={1}>
+          <text fg={t().textMuted}>Enter</text>
+          <text fg={t().borderSubtle}> send  </text>
+          <text fg={t().textMuted}>Esc</text>
+          <text fg={t().borderSubtle}> cancel</text>
+        </box>
       </box>
     </box>
   );

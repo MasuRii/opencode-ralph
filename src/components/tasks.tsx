@@ -1,5 +1,5 @@
 import { For } from "solid-js";
-import { legacyColors as colors } from "../lib/theme-colors";
+import { useTheme } from "../context/ThemeContext";
 import type { Task } from "../plan";
 
 export type TasksProps = {
@@ -15,9 +15,12 @@ export type TasksProps = {
  * Completed tasks are displayed with muted (grayed out) text.
  */
 function TaskItem(props: { task: Task }) {
+  const { theme } = useTheme();
+  const t = () => theme();
+
   const checkbox = () => (props.task.done ? "[✓]" : "[ ]");
-  const textColor = () => (props.task.done ? colors.fgMuted : colors.fg);
-  const checkColor = () => (props.task.done ? colors.green : colors.fgDark);
+  const textColor = () => (props.task.done ? t().textMuted : t().text);
+  const checkColor = () => (props.task.done ? t().success : t().textMuted);
 
   return (
     <box width="100%" flexDirection="row">
@@ -33,20 +36,23 @@ function TaskItem(props: { task: Task }) {
  * Press ESC to close the panel.
  */
 export function Tasks(props: TasksProps) {
+  const { theme } = useTheme();
+  const t = () => theme();
+
   return (
     <scrollbox
       flexGrow={1}
       stickyScroll={false}
       rootOptions={{
-        backgroundColor: colors.bgPanel,
+        backgroundColor: t().backgroundPanel,
       }}
       viewportOptions={{
-        backgroundColor: colors.bgPanel,
+        backgroundColor: t().backgroundPanel,
       }}
       verticalScrollbarOptions={{
         visible: true,
         trackOptions: {
-          backgroundColor: colors.border,
+          backgroundColor: t().border,
         },
       }}
     >

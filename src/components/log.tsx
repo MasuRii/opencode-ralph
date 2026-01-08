@@ -217,10 +217,14 @@ function ReasoningEventItem(props: { event: ToolEvent; theme: Theme }) {
  * PERF: Uses <For> directly on props.events to avoid allocating wrapper objects.
  * Spinner is managed as an event in the array, always kept at the end to ensure
  * it renders at the bottom of the scrollable content.
+ * 
+ * NOTE: Uses reactive theme getter `t()` for proper theme updates.
+ * Theme is accessed via getter in scrollbox options to ensure reactivity.
  */
 export function Log(props: LogProps) {
   const { theme } = useTheme();
-  const t = theme();
+  // Reactive getter ensures theme updates propagate correctly
+  const t = () => theme();
 
   return (
     <scrollbox
@@ -228,15 +232,15 @@ export function Log(props: LogProps) {
       stickyScroll={true}
       stickyStart="bottom"
       rootOptions={{
-        backgroundColor: t.background,
+        backgroundColor: t().background,
       }}
       viewportOptions={{
-        backgroundColor: t.backgroundPanel,
+        backgroundColor: t().backgroundPanel,
       }}
       verticalScrollbarOptions={{
         visible: true,
         trackOptions: {
-          backgroundColor: t.border,
+          backgroundColor: t().border,
         },
       }}
     >
@@ -244,22 +248,22 @@ export function Log(props: LogProps) {
         {(event) => (
           <Switch>
             <Match when={event.type === "spinner"}>
-              <Spinner isIdle={props.isIdle} theme={t} />
+              <Spinner isIdle={props.isIdle} theme={t()} />
             </Match>
             <Match when={event.type === "separator"}>
-              <SeparatorEvent event={event} theme={t} />
+              <SeparatorEvent event={event} theme={t()} />
             </Match>
             <Match when={event.type === "tool"}>
-              <ToolEventItem event={event} theme={t} />
+              <ToolEventItem event={event} theme={t()} />
             </Match>
             <Match when={event.type === "reasoning"}>
-              <ReasoningEventItem event={event} theme={t} />
+              <ReasoningEventItem event={event} theme={t()} />
             </Match>
           </Switch>
         )}
       </For>
       <Show when={props.errorRetryAt !== undefined}>
-        <RetryCountdown retryAt={props.errorRetryAt!} theme={t} />
+        <RetryCountdown retryAt={props.errorRetryAt!} theme={t()} />
       </Show>
     </scrollbox>
   );

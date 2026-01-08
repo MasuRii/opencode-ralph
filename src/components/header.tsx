@@ -3,7 +3,7 @@ import { useTheme } from "../context/ThemeContext";
 import { formatEta } from "../util/time";
 
 export type HeaderProps = {
-  status: "starting" | "running" | "paused" | "complete" | "error" | "idle";
+  status: "starting" | "running" | "paused" | "complete" | "error" | "ready";
   iteration: number;
   tasksComplete: number;
   totalTasks: number;
@@ -14,31 +14,33 @@ export type HeaderProps = {
 /**
  * Header component displaying status, iteration, tasks, and ETA.
  * Compact single-line layout for log-centric view.
+ * 
+ * NOTE: Uses reactive theme getter `t()` for proper theme updates.
  */
 export function Header(props: HeaderProps) {
   const { theme } = useTheme();
+  // Reactive getter ensures theme updates propagate correctly
+  const t = () => theme();
   
-  // Status indicator with appropriate icon and color
+  // Status indicator with appropriate icon and color - reactive via getter
   const getStatusDisplay = () => {
-    const t = theme();
+    const colors = t();
     switch (props.status) {
       case "running":
-        return { icon: "●", color: t.success };
+        return { icon: "●", color: colors.success };
       case "paused":
-        return { icon: "⏸", color: t.warning };
+        return { icon: "⏸", color: colors.warning };
       case "complete":
-        return { icon: "✓", color: t.success };
+        return { icon: "✓", color: colors.success };
       case "error":
-        return { icon: "✗", color: t.error };
-      case "idle":
-        return { icon: "○", color: t.info };
+        return { icon: "✗", color: colors.error };
+      case "ready":
+        return { icon: "○", color: colors.info };
       case "starting":
       default:
-        return { icon: "◌", color: t.textMuted };
+        return { icon: "◌", color: colors.textMuted };
     }
   };
-
-  const statusDisplay = getStatusDisplay();
 
   // Memoize progress bar strings - only recompute when tasksComplete or totalTasks change
   const filledCount = createMemo(() =>
@@ -48,8 +50,6 @@ export function Header(props: HeaderProps) {
   );
   const filledBar = createMemo(() => "█".repeat(filledCount()));
   const emptyBar = createMemo(() => "░".repeat(8 - filledCount()));
-
-  const t = theme();
   
   return (
     <box
@@ -59,40 +59,40 @@ export function Header(props: HeaderProps) {
       alignItems="center"
       paddingLeft={1}
       paddingRight={1}
-      backgroundColor={t.backgroundPanel}
+      backgroundColor={t().backgroundPanel}
     >
       {/* Debug mode badge */}
       {props.debug && (
         <>
-          <text fg={t.warning}>[DEBUG]</text>
-          <text fg={t.borderSubtle}>{" "}</text>
+          <text fg={t().warning}>[DEBUG]</text>
+          <text fg={t().borderSubtle}>{" "}</text>
         </>
       )}
 
       {/* Status indicator */}
-      <text fg={statusDisplay.color}>{statusDisplay.icon}</text>
-      <text fg={t.text}> {props.status}</text>
+      <text fg={getStatusDisplay().color}>{getStatusDisplay().icon}</text>
+      <text fg={t().text}> {props.status}</text>
 
       {/* Separator */}
-      <text fg={t.borderSubtle}>{" │ "}</text>
+      <text fg={t().borderSubtle}>{" │ "}</text>
 
       {/* Iteration display */}
-      <text fg={t.textMuted}>iter </text>
-      <text fg={t.text}>{props.iteration}</text>
+      <text fg={t().textMuted}>iter </text>
+      <text fg={t().text}>{props.iteration}</text>
 
       {/* Separator */}
-      <text fg={t.borderSubtle}>{" │ "}</text>
+      <text fg={t().borderSubtle}>{" │ "}</text>
 
       {/* Task progress with inline progress bar */}
-      <text fg={t.textMuted}>{filledBar()}</text>
-      <text fg={t.borderSubtle}>{emptyBar()}</text>
-      <text fg={t.text}> {props.tasksComplete}/{props.totalTasks}</text>
+      <text fg={t().textMuted}>{filledBar()}</text>
+      <text fg={t().borderSubtle}>{emptyBar()}</text>
+      <text fg={t().text}> {props.tasksComplete}/{props.totalTasks}</text>
 
       {/* Separator */}
-      <text fg={t.borderSubtle}>{" │ "}</text>
+      <text fg={t().borderSubtle}>{" │ "}</text>
 
       {/* ETA display */}
-      <text fg={t.textMuted}>{formatEta(props.eta)}</text>
+      <text fg={t().textMuted}>{formatEta(props.eta)}</text>
     </box>
   );
 }
