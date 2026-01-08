@@ -11,9 +11,15 @@ import { initLog, log } from "./util/log";
 import { readFileSync, existsSync } from "fs";
 import { join } from "path";
 import { homedir } from "os";
+
 // Version is injected at build time via Bun's define
-// @ts-expect-error - RALPH_VERSION is replaced at build time
-const version: string = RALPH_VERSION;
+declare const RALPH_VERSION: string | undefined;
+
+// In dev mode, fall back to reading from package.json
+const version: string =
+  typeof RALPH_VERSION !== "undefined"
+    ? RALPH_VERSION
+    : JSON.parse(readFileSync(join(import.meta.dir, "../package.json"), "utf-8")).version + "-dev";
 
 interface RalphConfig {
   model?: string;

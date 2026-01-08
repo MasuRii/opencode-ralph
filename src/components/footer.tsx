@@ -45,19 +45,19 @@ export function Footer(props: FooterProps) {
     >
       {/* Keybind hints (left side) - using separate <text> elements for colors */}
       <box flexDirection="row">
-        <text fg={t().borderSubtle}>q</text>
-        <text fg={t().textMuted}> quit  </text>
-        <text fg={t().borderSubtle}>p</text>
-        <text fg={t().textMuted}> {actionLabel()}  </text>
-        <text fg={t().borderSubtle}>T</text>
-        <text fg={t().textMuted}> tasks  </text>
+        <text fg={t().accent}>q</text>
+        <text fg={t().text}> quit  </text>
+        <text fg={t().accent}>p</text>
+        <text fg={t().text}> {actionLabel()}  </text>
+        <text fg={t().accent}>T</text>
+        <text fg={t().text}> tasks  </text>
         <text fg={t().accent}>c</text>
-        <text fg={t().textMuted}> cmds</text>
+        <text fg={t().text}> cmds</text>
         {props.sessionActive && (
           <>
-            <text fg={t().textMuted}>  </text>
-            <text fg={t().borderSubtle}>:</text>
-            <text fg={t().textMuted}> steer</text>
+            <text fg={t().text}>  </text>
+            <text fg={t().accent}>:</text>
+            <text fg={t().text}> steer</text>
           </>
         )}
       </box>
@@ -70,25 +70,25 @@ export function Footer(props: FooterProps) {
         {/* Token display - only show when tokens > 0 */}
         {props.tokens && (props.tokens.input > 0 || props.tokens.output > 0) && (
           <>
-            <text fg={t().borderSubtle}>{formatNumber(props.tokens.input)}in</text>
-            <text fg={t().textMuted}>/</text>
-            <text fg={t().borderSubtle}>{formatNumber(props.tokens.output)}out</text>
+            <text fg={t().accent}>{formatNumber(props.tokens.input)}in</text>
+            <text fg={t().text}>/</text>
+            <text fg={t().accent}>{formatNumber(props.tokens.output)}out</text>
             {props.tokens.reasoning > 0 && (
               <>
-                <text fg={t().textMuted}>/</text>
-                <text fg={t().borderSubtle}>{formatNumber(props.tokens.reasoning)}r</text>
+                <text fg={t().text}>/</text>
+                <text fg={t().accent}>{formatNumber(props.tokens.reasoning)}r</text>
               </>
             )}
-            <text fg={t().textMuted}> · </text>
+            <text fg={t().text}> · </text>
           </>
         )}
         <text fg={t().success}>+{props.linesAdded}</text>
-        <text fg={t().textMuted}>/</text>
+        <text fg={t().text}>/</text>
         <text fg={t().error}>-{props.linesRemoved}</text>
-        <text fg={t().textMuted}> · </text>
-        <text fg={t().borderSubtle}>{props.commits}c</text>
-        <text fg={t().textMuted}> · </text>
-        <text fg={t().borderSubtle}>{formatDuration(props.elapsed)}</text>
+        <text fg={t().text}> · </text>
+        <text fg={t().accent}>{props.commits}c</text>
+        <text fg={t().text}> · </text>
+        <text fg={t().accent}>{formatDuration(props.elapsed)}</text>
       </box>
     </box>
   );
