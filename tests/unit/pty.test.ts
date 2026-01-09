@@ -15,27 +15,20 @@ describe("spawnPty", () => {
   it("spawns with PTY settings and drains output", async () => {
     let capturedOptions: any;
     const outputChunks: string[] = [];
-
-    const stdoutStream = new ReadableStream<Uint8Array>({
-      start(controller) {
-        controller.enqueue(new TextEncoder().encode("out"));
-        controller.close();
-      },
-    });
-
-    const stderrStream = new ReadableStream<Uint8Array>({
-      start(controller) {
-        controller.enqueue(new TextEncoder().encode("err"));
-        controller.close();
-      },
-    });
+    let terminalData: ((terminal: unknown, data: string) => void) | undefined;
 
     Bun.spawn = ((command: string[], options: any) => {
       capturedOptions = options;
+      terminalData = options.terminal?.data;
       return {
-        stdout: stdoutStream,
-        stderr: stderrStream,
-        stdin: { write: (_data: string) => {} },
+        terminal: {
+          write: (_data: string) => {},
+          resize: (_cols: number, _rows: number) => {},
+          close: () => {},
+        },
+        stdout: null,
+        stderr: null,
+        stdin: null,
         pid: 123,
         kill: () => {},
         exited: Promise.resolve(0),
@@ -51,9 +44,13 @@ describe("spawnPty", () => {
 
     pty.onData((data) => outputChunks.push(data));
 
+    terminalData?.({} as any, "out");
+    terminalData?.({} as any, "err");
+
     await new Promise((resolve) => setTimeout(resolve, 0));
 
-    expect(capturedOptions.stdin).toBe("pty");
+    expect(capturedOptions.terminal.cols).toBe(100);
+    expect(capturedOptions.terminal.rows).toBe(40);
     expect(capturedOptions.env.TERM).toBe("xterm-256color");
     expect(capturedOptions.env.COLUMNS).toBe("100");
     expect(capturedOptions.env.LINES).toBe("40");

@@ -333,6 +333,8 @@ export function App(props: AppProps) {
               setShowTasks={setShowTasks}
               tasks={tasks}
               refreshTasks={refreshTasks}
+              terminalCols={terminalCols}
+              terminalRows={terminalRows}
               loopStore={loopStore}
               loopStats={loopStats}
             />
@@ -363,6 +365,8 @@ type AppContentProps = {
   setShowTasks: (v: boolean) => void;
   tasks: () => Task[];
   refreshTasks: () => Promise<void>;
+  terminalCols: Accessor<number>;
+  terminalRows: Accessor<number>;
   // Hook-based state stores (for gradual migration)
   loopStore: LoopStateStore;
   loopStats: LoopStatsStore;
@@ -1049,8 +1053,8 @@ function AppContent(props: AppContentProps) {
       {props.state().adapterMode === "pty" ? (
         <TerminalPane
           buffer={props.state().terminalBuffer || ""}
-          cols={terminalCols()}
-          rows={terminalRows()}
+          cols={props.terminalCols()}
+          rows={props.terminalRows()}
         />
       ) : (
         <Log
