@@ -898,6 +898,7 @@ async function main() {
         });
       },
       onIterationComplete: (iteration, duration, commits) => {
+        batchedUpdater.flushNow();
         // Mutate the separator event in-place and remove spinner
         stateSetters.setState((prev) => {
           for (const event of prev.events) {
@@ -959,11 +960,21 @@ async function main() {
         }));
       },
       onComplete: () => {
-        // Update state.status to "complete"
-        stateSetters.setState((prev) => ({
-          ...prev,
-          status: "complete",
-        }));
+        batchedUpdater.flushNow();
+        // Update state.status to "complete" and clear any lingering spinners
+        stateSetters.setState((prev) => {
+          const events = prev.events;
+          for (let i = events.length - 1; i >= 0; i--) {
+            if (events[i].type === "spinner") {
+              events.splice(i, 1);
+            }
+          }
+          return {
+            ...prev,
+            status: "complete",
+            isIdle: true,
+          };
+        });
       },
       onError: (error) => {
         // Update state.status to "error" and set state.error
