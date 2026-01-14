@@ -82,7 +82,23 @@ export function LeftPanel(props: LeftPanelProps) {
       border
       borderColor={t().border}
     >
-      <scrollbox flexGrow={1} width="100%">
+      <scrollbox
+        flexGrow={1}
+        width="100%"
+        stickyScroll={false}
+        rootOptions={{
+          backgroundColor: t().background,
+        }}
+        viewportOptions={{
+          backgroundColor: t().background,
+        }}
+        verticalScrollbarOptions={{
+          visible: true,
+          trackOptions: {
+            backgroundColor: t().border,
+          },
+        }}
+      >
         <Show
           when={props.tasks.length > 0}
           fallback={
