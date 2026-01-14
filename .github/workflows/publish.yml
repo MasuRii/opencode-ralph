@@ -54,6 +54,23 @@ jobs:
           RALPH_VERSION: ${{ inputs.version }}
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
+      - name: Package release binaries
+        if: ${{ steps.publish.outputs.version != '' }}
+        run: |
+          version="${{ steps.publish.outputs.version }}"
+          mkdir -p release-assets
+          for dir in dist/openralph-*; do
+            if [ ! -d "$dir/bin" ]; then
+              continue
+            fi
+            pkg=$(basename "$dir")
+            if [ -f "$dir/bin/ralph.exe" ]; then
+              tar -czf "release-assets/${pkg}-${version}.tar.gz" -C "$dir" bin/ralph.exe
+            elif [ -f "$dir/bin/ralph" ]; then
+              tar -czf "release-assets/${pkg}-${version}.tar.gz" -C "$dir" bin/ralph
+            fi
+          done
+
       - name: Create GitHub release
         if: ${{ steps.publish.outputs.version != '' }}
         env:
@@ -74,6 +91,18 @@ jobs:
           fi
 
           gh release create "$tag" "${flags[@]}"
+
+      - name: Upload release binaries
+        if: ${{ steps.publish.outputs.version != '' }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          tag="v${{ steps.publish.outputs.version }}"
+          if ls release-assets/*.tar.gz >/dev/null 2>&1; then
+            gh release upload "$tag" release-assets/*.tar.gz --clobber
+          else
+            echo "No release assets found to upload."
+          fi
 
       - name: Summary
         run: |
