@@ -1,4 +1,5 @@
-import { For, Show } from "solid-js";
+import { For, Show, createEffect } from "solid-js";
+import type { ScrollBoxRenderable } from "@opentui/core";
 import { useTheme } from "../context/ThemeContext";
 import { taskStatusIndicators } from "./tui-theme";
 import type { TaskStatus, UiTask } from "./tui-types";
@@ -67,8 +68,40 @@ function TaskRow(props: {
 export function LeftPanel(props: LeftPanelProps) {
   const { theme } = useTheme();
   const t = () => theme();
+  let scrollboxRef: ScrollBoxRenderable | undefined;
 
   const maxRowWidth = () => Math.max(20, props.width - 4);
+
+  createEffect(() => {
+    const selectedIndex = props.selectedIndex;
+    const taskCount = props.tasks.length;
+
+    if (!scrollboxRef || taskCount === 0) {
+      return;
+    }
+
+    const viewportHeight = scrollboxRef.viewport?.height ?? 0;
+    if (viewportHeight <= 0) {
+      return;
+    }
+
+    const currentTop = scrollboxRef.scrollTop;
+    const maxVisibleIndex = currentTop + viewportHeight - 1;
+    let nextTop = currentTop;
+
+    if (selectedIndex < currentTop) {
+      nextTop = selectedIndex;
+    } else if (selectedIndex > maxVisibleIndex) {
+      nextTop = selectedIndex - viewportHeight + 1;
+    }
+
+    const maxScrollTop = Math.max(0, scrollboxRef.scrollHeight - viewportHeight);
+    nextTop = Math.min(maxScrollTop, Math.max(0, nextTop));
+
+    if (nextTop !== scrollboxRef.scrollTop) {
+      scrollboxRef.scrollTop = nextTop;
+    }
+  });
 
   return (
     <box
@@ -83,6 +116,9 @@ export function LeftPanel(props: LeftPanelProps) {
       borderColor={t().border}
     >
       <scrollbox
+        ref={(el) => {
+          scrollboxRef = el;
+        }}
         flexGrow={1}
         width="100%"
         stickyScroll={false}
