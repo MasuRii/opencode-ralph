@@ -8,6 +8,8 @@ export type LeftPanelProps = {
   tasks: UiTask[];
   selectedIndex: number;
   width: number;
+  /** Panel height - used to trigger scroll recalculation on terminal resize */
+  height: number;
 };
 
 function truncateText(text: string, maxWidth: number): string {
@@ -75,6 +77,8 @@ export function LeftPanel(props: LeftPanelProps) {
   createEffect(() => {
     const selectedIndex = props.selectedIndex;
     const taskCount = props.tasks.length;
+    // Access height to create reactive dependency - effect re-runs on terminal resize
+    const _panelHeight = props.height;
 
     if (!scrollboxRef || taskCount === 0) {
       return;
