@@ -25,6 +25,7 @@ import { loadConfig, setPreferredTerminal } from "./lib/config";
 import { parsePlanTasks, type Task } from "./plan";
 import { layout } from "./components/tui-theme";
 import type { DetailsViewMode, UiTask } from "./components/tui-types";
+import { isWindowsTerminal, isLegacyConsole } from "./lib/windows-console";
 
 
 import { log } from "./util/log";
@@ -115,6 +116,9 @@ export async function startApp(props: StartAppProps): Promise<StartAppResult> {
     exitResolve();
   };
 
+  // Platform-specific render configuration
+  const isWindowsPlatform = process.platform === "win32";
+  
   // Await render to ensure CLI renderer is fully initialized
   await render(
     () => (
@@ -127,10 +131,15 @@ export async function startApp(props: StartAppProps): Promise<StartAppResult> {
       />
     ),
     {
-      targetFps: 30, // Balanced FPS: OpenCode uses 60, but 30 is sufficient for ralph's logging TUI
-      gatherStats: false, // Disable stats gathering for performance (matches OpenCode)
+      // Lower FPS on Windows legacy consoles for better performance
+      targetFps: isWindowsPlatform && !process.env.WT_SESSION ? 20 : 30,
+      gatherStats: false, // Disable stats gathering for performance
       exitOnCtrlC: false,
-      useKittyKeyboard: {}, // Enable Kitty keyboard protocol for improved key event handling
+      // Enable Kitty keyboard protocol for improved key event handling
+      // Windows Terminal supports Kitty keyboard protocol since v1.18
+      useKittyKeyboard: {},
+      // Higher debounce delay on Windows to reduce rendering load
+      debounceDelay: isWindowsPlatform ? 150 : 100,
     }
   );
 
@@ -266,6 +275,14 @@ export function App(props: AppProps) {
     tasksRefreshInterval = setInterval(() => {
       refreshTasks();
     }, 2000);
+    
+    // Windows-specific: Force an initial render after a short delay
+    // This helps ensure the TUI renders correctly on Windows Terminal
+    if (process.platform === "win32") {
+      setTimeout(() => {
+        renderer.requestRender?.();
+      }, 100);
+    }
   });
 
   // Clean up tasks refresh interval on unmount
@@ -423,6 +440,40 @@ function AppContent(props: AppContentProps) {
   const isInputFocused = () => props.commandMode() || dialogInputFocused();
 
   const terminalDimensions = useTerminalDimensions();
+  
+  // Windows-specific: Poll for terminal resize since SIGWINCH may not work reliably
+  // This supplements the native resize event handling
+  const isWindows = process.platform === "win32";
+  let lastKnownWidth = 0;
+  let lastKnownHeight = 0;
+  
+  onMount(() => {
+    if (isWindows) {
+      // Initialize with current dimensions
+      lastKnownWidth = process.stdout.columns || 80;
+      lastKnownHeight = process.stdout.rows || 24;
+      
+      // Poll for resize changes every 500ms on Windows
+      const resizePollInterval = setInterval(() => {
+        const currentWidth = process.stdout.columns || 80;
+        const currentHeight = process.stdout.rows || 24;
+        
+        if (currentWidth !== lastKnownWidth || currentHeight !== lastKnownHeight) {
+          lastKnownWidth = currentWidth;
+          lastKnownHeight = currentHeight;
+          log("app", "Windows resize detected via polling", { width: currentWidth, height: currentHeight });
+          
+          // Force a render request to update the layout
+          props.renderer.requestRender?.();
+        }
+      }, 500);
+      
+      onCleanup(() => {
+        clearInterval(resizePollInterval);
+      });
+    }
+  });
+  
   const [selectedTaskIndex, setSelectedTaskIndex] = createSignal(0);
   const [detailsViewMode, setDetailsViewMode] = createSignal<DetailsViewMode>("details");
   const [showHelp, setShowHelp] = createSignal(false);
