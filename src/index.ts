@@ -321,7 +321,7 @@ async function main() {
     .usage("$0 [options]")
     .command(
       "init",
-      "Initialize PRD plan, progress log, and prompt template",
+      "Initialize PRD plan, progress log, prompt, plugin, AGENTS.md, and .gitignore",
       (cmd) =>
         cmd
           .option("from", {
@@ -444,6 +444,9 @@ async function main() {
       planFile: argv.plan,
       progressFile: argv.progress,
       promptFile: argv.promptFile as string,
+      pluginFile: ".opencode/plugin/ralph-write-guardrail.ts",
+      agentsFile: "AGENTS.md",
+      gitignoreFile: ".gitignore",
       from: argv.from as string | undefined,
       force: argv.force as boolean | undefined,
     });
